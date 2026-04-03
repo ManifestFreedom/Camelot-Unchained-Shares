@@ -106,12 +106,13 @@ const TOTAL_PTS=130;
 const DFN={
   // ── Vitality ──
   "Max HP":           s=>(5000+100*s.Vitality)*(1+s.Vitality*.02),
+  "Max Shield":       s=>(5000+100*s.Vitality)*(1+s.Vitality*.02)/2,
   "HP Regen/s":       s=>{const h=(5000+100*s.Vitality)*(1+s.Vitality*.02);return h/150*(1+s.Vitality*.02);},
   // ── Spirit ──
   "Max Mana":         s=>(5000+100*s.Spirit)*(1+s.Spirit*.02),
   "Mana Regen/s":     s=>{const m=(5000+100*s.Spirit)*(1+s.Spirit*.02);return m/500*(1+s.Spirit*.02);},
   "Faith Regen":      s=>10*(1+s.Spirit*.03),
-  "Focus Regen":      s=>.1+s.Spirit*.005,
+  "Focus Regen %":    s=>(.1+s.Spirit*.005)*100,
   "Determ. Regen":    s=>20*(s.Spirit/100),
   "Courage Degen":    s=>-10*(100/Math.max(s.Spirit,1)),
   // ── Conviction ──
@@ -121,34 +122,45 @@ const DFN={
   // ── Endurance ──
   "Debuff Dur x":     s=>1-s.Endurance*.005,
   "Guts Threshold %": s=>.1*(1+s.Endurance*.01)*100,
-  "Guts Multiplier":  s=>1-s.Endurance*.0105,
+  "Guts DR %":        s=>.1*(1+s.Endurance*.005)*100,
+  "Block Value x":    s=>1+s.Endurance*.01,
   // ── Dexterity ──
   "Evasion %":        s=>s.Dexterity*.002*(1+s.Dexterity*.01)*100,
-  "Base Evasion %":   s=>s.Dexterity*.002*100,
+  // "Base Evasion %":   s=>s.Dexterity*.002*100,
+  "Block CD":         s=>4*(1-s.Dexterity*.01),
   // ── Command ──
+  "Panic Multiplier":     s=>1+s.Command*.01,
   "Detection Range":  s=>5+s.Command*.75,
-  "Veil Resist x":    s=>1-s.Command*.005,
+  "Veil Resist %":    s=>s.Command*.5,
   // ── Strength ──
-  "Max Shield":       s=>(5000+100*s.Vitality)*(1+s.Vitality*.02)/2,
+  "Melee Damage":     s=>1+s.Strength*.01,
   // ── Will ──
   "Panic Decay":      s=>-5,
+  "Panic Resist %":    s=>s.Will*.5,
   // ── Attunement ──
+  "Spell Damage":     s=>1+s.Attunement*.01,
   "Prospecting Cap":  s=>100,
+  // ── Flat values ──
+  "Parry %":          s=>5,
 };
 const DRIVER={
   "Max HP":"Vitality","HP Regen/s":"Vitality",
-  "Max Mana":"Spirit","Mana Regen/s":"Spirit","Faith Regen":"Spirit","Determ. Regen":"Spirit","Focus Regen":"Spirit","Courage Degen":"Spirit",
+  "Max Mana":"Spirit","Mana Regen/s":"Spirit","Faith Regen":"Spirit","Determ. Regen":"Spirit","Focus Regen %":"Spirit","Courage Degen":"Spirit",
   "Buff Duration x":"Conviction","Buff Effect x":"Conviction","Healing x":"Conviction",
-  "Detection Range":"Command","Veil Resist x":"Command",
-  "Debuff Dur x":"Endurance","Guts Threshold %":"Endurance","Guts Multiplier":"Endurance",
-  "Evasion %":"Dexterity","Base Evasion %":"Dexterity",
+  "Panic Multiplier":"Command","Detection Range":"Command","Veil Resist %":"Command",
+  "Debuff Dur x":"Endurance","Guts Threshold %":"Endurance","Guts DR %":"Endurance","Block Value x":"Endurance",
+  "Evasion %":"Dexterity","Block CD":"Dexterity",
   "Max Shield":"Vitality",
+  "Melee Damage":"Strength",
+  "Spell Damage":"Attunement",
+  "Panic Resist %":"Will",
 };
 const DGROUPS=[
   {label:"Combat Pool",  keys:["Max HP","Max Mana","Max Shield","HP Regen/s","Mana Regen/s"]},
-  {label:"Abilities",    keys:["Buff Duration x","Buff Effect x","Healing x","Faith Regen","Focus Regen","Determ. Regen","Courage Degen"]},
-  {label:"Defense",      keys:["Debuff Dur x","Guts Threshold %","Guts Multiplier","Evasion %","Base Evasion %"]},
-  {label:"Utility",      keys:["Detection Range","Veil Resist x"]},
+  {label:"Abilities",    keys:["Buff Duration x","Buff Effect x","Healing x","Faith Regen","Focus Regen %","Determ. Regen","Courage Degen"]},
+  {label:"Offense",      keys:["Melee Damage","Spell Damage", "Panic Multiplier"]},
+  {label:"Defense",      keys:["Debuff Dur x","Guts Threshold %","Guts DR %","Evasion %", "Block CD", "Block Value x", "Parry %", "Panic Resist %"]},
+  {label:"Utility",      keys:["Detection Range","Veil Resist %"]},
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -174,7 +186,7 @@ function fmt(key,val){
   if(["HP Regen/s","Mana Regen/s","Faith Regen","Determ. Regen","Courage Degen"].includes(key))return v.toFixed(2);
   if(key==="Focus Regen")return v.toFixed(3);
   if(key.endsWith(" x"))return v.toFixed(3)+"x";
-  if(key==="Evasion %"||key==="Base Evasion %"||key==="Guts Threshold %")return v.toFixed(2)+"%";
+  if(key.endsWith(" %"))return v.toFixed(2)+"%";
   if(key==="Detection Range")return v.toFixed(1)+" u";
   if(key==="Guts Multiplier")return v.toFixed(3)+"x";
   if(key==="Panic Decay"||key==="Prospecting Cap")return v.toFixed(0);
@@ -335,6 +347,7 @@ function buildPlannerHTML(){
   const derivedHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
     <div>${makeGroup(DGROUPS[0])}${makeGroup(DGROUPS[1])}</div>
     <div>${makeGroup(DGROUPS[2])}${makeGroup(DGROUPS[3])}</div>
+    <div>${makeGroup(DGROUPS[4])}</div>
   </div>`;
 
   const ptUsed=Object.values(S.alloc).reduce((a,b)=>a+b,0);
