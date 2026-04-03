@@ -9,6 +9,7 @@ This is an html file you can run through GitHub or locally in your desktop witho
 <img width="1504" height="760" alt="image" src="https://github.com/user-attachments/assets/613cb50a-d003-4547-bfd3-0771d70a5941" />
 
 GitHub: https://manifestfreedom.github.io/Camelot-Unchained-Shares/
+
 Local File: https://github.com/ManifestFreedom/Camelot-Unchained-Shares/blob/main/cu_stat_dashboard%20(7).html
 
 This is an excel file where you can view information from the CU API: 
