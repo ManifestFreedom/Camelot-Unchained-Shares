@@ -101,18 +101,19 @@ const RACES=[
 ];
 const FC={Arthurian:"#cc3f3f",Viking:"#4a9edd",TDD:"#4a9e6a"};
 const STATS=["Attunement","Command","Conviction","Dexterity","Endurance","Spirit","Strength","Vitality","Will"];
+const GEAR_STATS = [...STATS, "BonusHealth"]; // Gear can also add BonusHealth
 const SC={Attunement:"#9b6dff",Command:"#ff9940",Conviction:"#ff5577",Dexterity:"#40e0d0",Endurance:"#8ac840",Spirit:"#40c8ff",Strength:"#ff5040",Vitality:"#ff4060",Will:"#d040ff"};
 const TOTAL_PTS=130;
 const DFN={
   // ── Vitality ──
-  "Max HP":           s=>(5000+100*s.Vitality)*(1+s.Vitality*.02),
-  "Max Shield":       s=>(5000+100*s.Vitality)*(1+s.Vitality*.02)/2,
-  "HP Regen/s":       s=>{const h=(5000+100*s.Vitality)*(1+s.Vitality*.02);return h/150*(1+s.Vitality*.02);},
+  "Max HP":           s => (5000 + 100 * s.Vitality) + (s.BonusHealth * (1 + s.Vitality * 0.02)),
+  "HP Regen/s":       s=>{const h=DFN["Max HP"](s); return h / 150*(1+s.Vitality*.02);},
+  "Max Shield":       s=>DFN["Max HP"](s) / 2,
   // ── Spirit ──
   "Max Mana":         s=>(5000+100*s.Spirit)*(1+s.Spirit*.02),
-  "Mana Regen/s":     s=>{const m=(5000+100*s.Spirit)*(1+s.Spirit*.02);return m/500*(1+s.Spirit*.02);},
+  "Mana Regen/s":     s=>{const m=(5000+100*s.Spirit)*(1+s.Spirit*.02);return m/150*(1+s.Spirit*.01);},
   "Faith Regen":      s=>10*(1+s.Spirit*.03),
-  "Focus Regen %":    s=>(.1+s.Spirit*.005)*100,
+  "Focus Regen":      s=>200 + s.Spirit * 1.5,
   "Determ. Regen":    s=>20*(s.Spirit/100),
   "Courage Degen":    s=>-10*(100/Math.max(s.Spirit,1)),
   // ── Conviction ──
@@ -120,7 +121,6 @@ const DFN={
   "Buff Effect x":    s=>1+s.Conviction*.005,
   "Healing x":        s=>1+s.Conviction*.01,
   // ── Endurance ──
-  "Debuff Dur x":     s=>1-s.Endurance*.005,
   "Guts Threshold %": s=>.1*(1+s.Endurance*.01)*100,
   "Guts DR %":        s=>.1*(1+s.Endurance*.005)*100,
   "Block Value x":    s=>1+s.Endurance*.01,
@@ -129,54 +129,56 @@ const DFN={
   // "Base Evasion %":   s=>s.Dexterity*.002*100,
   "Block CD":         s=>4*(1-s.Dexterity*.01),
   // ── Command ──
-  "Panic Multiplier":     s=>1+s.Command*.01,
   "Detection Range":  s=>5+s.Command*.75,
-  "Veil Resist %":    s=>s.Command*.5,
+  "Veil Resist x":    s=>1-s.Command*.005,
+  "Panic x": s=>1+s.Command*.01,
   // ── Strength ──
-  "Melee Damage":     s=>1+s.Strength*.01,
+  "Melee Dmg x": s=>1+s.Strength*.01,
+  // ── Attunement ──
+  "Spell Dmg x": s=>1+s.Attunement*.01,
   // ── Will ──
   "Panic Decay":      s=>-5,
   "Panic Resist %":    s=>s.Will*.5,
-  // ── Attunement ──
-  "Spell Damage":     s=>1+s.Attunement*.01,
-  "Prospecting Cap":  s=>100,
-  // ── Flat values ──
-  "Parry %":          s=>5,
+  "Debuff Dur x":     s=>1.1 - (0.015 * s.Will) / (1 + 0.02 * s.Will),
+  // ── Flat ──
+  "Parry %":  s=>5,
 };
 const DRIVER={
-  "Max HP":"Vitality","HP Regen/s":"Vitality",
-  "Max Mana":"Spirit","Mana Regen/s":"Spirit","Faith Regen":"Spirit","Determ. Regen":"Spirit","Focus Regen %":"Spirit","Courage Degen":"Spirit",
+  "Max HP":"Vitality","HP Regen/s":"Vitality","Max Shield":"Vitality",
+  "Max Mana":"Spirit","Mana Regen/s":"Spirit","Faith Regen":"Spirit","Determ. Regen":"Spirit","Focus Regen":"Spirit","Courage Degen":"Spirit",
   "Buff Duration x":"Conviction","Buff Effect x":"Conviction","Healing x":"Conviction",
-  "Panic Multiplier":"Command","Detection Range":"Command","Veil Resist %":"Command",
-  "Debuff Dur x":"Endurance","Guts Threshold %":"Endurance","Guts DR %":"Endurance","Block Value x":"Endurance",
+  "Detection Range":"Command","Veil Resist x":"Command","Panic x":"Command",
+  "Debuff Dur x":"Will", "Panic Resist %":"Will",
+  "Guts Threshold %":"Endurance","Guts DR %":"Endurance","Block Value x":"Endurance",
   "Evasion %":"Dexterity","Block CD":"Dexterity",
-  "Max Shield":"Vitality",
-  "Melee Damage":"Strength",
-  "Spell Damage":"Attunement",
-  "Panic Resist %":"Will",
+  "Melee Dmg x":"Strength",
+  "Spell Dmg x":"Attunement",
 };
 const DGROUPS=[
-  {label:"Combat Pool",  keys:["Max HP","Max Mana","Max Shield","HP Regen/s","Mana Regen/s"]},
-  {label:"Abilities",    keys:["Buff Duration x","Buff Effect x","Healing x","Faith Regen","Focus Regen %","Determ. Regen","Courage Degen"]},
-  {label:"Offense",      keys:["Melee Damage","Spell Damage", "Panic Multiplier"]},
+  {label:"Combat Pool",  keys:["Max HP","Max Mana","Max Shield","HP Regen/s","Mana Regen/s","Faith Regen","Focus Regen","Determ. Regen","Courage Degen"]},
+  {label:"Abilities",    keys:["Buff Duration x","Buff Effect x","Healing x"]},
+  {label:"Offense",      keys:["Melee Dmg x","Spell Dmg x","Panic x"]},
   {label:"Defense",      keys:["Debuff Dur x","Guts Threshold %","Guts DR %","Evasion %", "Block CD", "Block Value x", "Parry %", "Panic Resist %"]},
-  {label:"Utility",      keys:["Detection Range","Veil Resist %"]},
+  {label:"Utility",      keys:["Detection Range","Veil Resist x"]},
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const zero=()=>Object.fromEntries(STATS.map(s=>[s,0]));
 let S={
-  tab:0, raceId:"CaitSith", alloc:zero(), gear:zero(),
+  tab:0, raceId:"CaitSith", alloc:zero(), gear:Object.fromEntries(GEAR_STATS.map(s => [s, 0])),
   cmpAlloc:zero(), cmpDerived:"Max HP",
   scalePrimary:"Vitality", scaleDerived:"Max HP",
   optRaceId:"CaitSith", optAlloc:zero(), optDerived:"Max HP", optTarget:"",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getStats(raceId,alloc,gear){
-  gear=gear||{};
-  const r=RACES.find(x=>x.id===raceId);
-  return Object.fromEntries(STATS.map(s=>[s,10+(alloc[s]||0)+(r.b[s]||0)+(gear[s]||0)]));
+function getStats(raceId, alloc, gear) {
+  gear = gear || {};
+  const r = RACES.find(x => x.id === raceId);
+  const stats = Object.fromEntries(STATS.map(s => [s, 10 + (alloc[s] || 0) + (r.b[s] || 0) + (gear[s] || 0)]));
+  // Add BonusHealth (default 0 if not provided)
+  stats.BonusHealth = gear["BonusHealth"] || 0;
+  return stats;
 }
 function calcAll(st){return Object.fromEntries(Object.entries(DFN).map(([k,fn])=>[k,fn(st)]));}
 function fmt(key,val){
@@ -186,7 +188,7 @@ function fmt(key,val){
   if(["HP Regen/s","Mana Regen/s","Faith Regen","Determ. Regen","Courage Degen"].includes(key))return v.toFixed(2);
   if(key==="Focus Regen")return v.toFixed(3);
   if(key.endsWith(" x"))return v.toFixed(3)+"x";
-  if(key.endsWith(" %"))return v.toFixed(2)+"%";
+  if(key==="Evasion %"||key==="Parry %"||key==="Guts Threshold %")return v.toFixed(2)+"%";
   if(key==="Detection Range")return v.toFixed(1)+" u";
   if(key==="Guts Multiplier")return v.toFixed(3)+"x";
   if(key==="Panic Decay"||key==="Prospecting Cap")return v.toFixed(0);
@@ -275,10 +277,7 @@ function svgLine(data,W,H,xk,yk,color,refY,xLabel){
   return`<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`;
 }
 
-// ── Tab 0: Build Planner ──────────────────────────────────────────────────────
-// Key design: sliders are rendered once. oninput calls updateBuildDisplay()
-// which patches only text nodes — never touches slider elements.
-
+// Add BonusHealth to gear inputs
 function buildPlannerHTML(){
   const race=RACES.find(r=>r.id===S.raceId);
   const fc=FC[race.faction];
@@ -318,12 +317,12 @@ function buildPlannerHTML(){
       </div>`;
   });
 
-  let gearInputs="";
-  STATS.forEach(s=>{
-    gearInputs+=`<div style="display:flex;align-items:center;gap:4px">
-      <span style="font-size:10px;color:${SC[s]};width:80px;flex-shrink:0">${s}</span>
-      <input type="number" class="numsmall" min="0" max="50" value="${S.gear[s]||0}"
-        oninput="onGear('${s}',+this.value)"/>
+  let gearInputs = "";
+  GEAR_STATS.forEach(s => {
+    gearInputs += `<div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:10px;color:${SC[s] || "#e8d9a0"};width:80px;flex-shrink:0">${s}</span>
+      <input type="number" class="numsmall" min="0" max="50" value="${S.gear[s] || 0}"
+        oninput="onGear('${s}', +this.value)"/>
     </div>`;
   });
 
@@ -403,41 +402,47 @@ function onSlider(s, v){
   updateBuildDisplay();
 }
 
-function onGear(s,v){
-  S.gear[s]=Math.max(0,Math.min(50,v||0));
+function onGear(s, v) {
+  S.gear[s] = Math.max(0, Math.min(50, v || 0));
   updateBuildDisplay();
 }
 
 // Patches only the display nodes — sliders untouched
-function updateBuildDisplay(){
-  const race=RACES.find(r=>r.id===S.raceId);
-  const fc=FC[race.faction];
-  const ptUsed=Object.values(S.alloc).reduce((a,b)=>a+b,0);
-  const ptLeft=TOTAL_PTS-ptUsed;
-  const ptPct=Math.min(100,ptUsed/TOTAL_PTS*100);
-  const ptColor=ptLeft<0?"#e24b4a":ptLeft===0?"#e8d9a0":"#4a9e6a";
+function updateBuildDisplay() {
+  const race = RACES.find(r => r.id === S.raceId);
+  const fc = FC[race.faction];
+  const ptUsed = Object.values(S.alloc).reduce((a, b) => a + b, 0);
+  const ptLeft = TOTAL_PTS - ptUsed;
+  const ptPct = Math.min(100, ptUsed / TOTAL_PTS * 100);
+  const ptColor = ptLeft < 0 ? "#e24b4a" : ptLeft === 0 ? "#e8d9a0" : "#4a9e6a";
 
   // Point counter
-  const elUsed=document.getElementById("pt-used");
-  const elLeft=document.getElementById("pt-left");
-  const elBar =document.getElementById("pt-bar");
-  if(elUsed) elUsed.textContent=ptUsed;
-  if(elLeft){elLeft.textContent=ptLeft+" left";elLeft.style.color=ptColor;}
-  if(elBar){elBar.style.width=ptPct+"%";elBar.style.background=ptLeft<0?"#e24b4a":fc;}
+  const elUsed = document.getElementById("pt-used");
+  const elLeft = document.getElementById("pt-left");
+  const elBar = document.getElementById("pt-bar");
+  if (elUsed) elUsed.textContent = ptUsed;
+  if (elLeft) {
+    elLeft.textContent = ptLeft + " left";
+    elLeft.style.color = ptColor;
+  }
+  if (elBar) {
+    elBar.style.width = ptPct + "%";
+    elBar.style.background = ptLeft < 0 ? "#e24b4a" : fc;
+  }
 
   // Per-stat display + slider max
-  STATS.forEach(s=>{
-    const racial=race.b[s]||0;
-    const cur=S.alloc[s]||0;
-    const gearB=S.gear[s]||0;
-    const total=10+cur+racial+gearB;
-    const maxA=40;
-    const newMax=Math.min(maxA,cur+ptLeft);
-    const valEl=document.getElementById("sval-"+s);
-    if(valEl) valEl.innerHTML=`<span class="stat-bold" style="color:${SC[s]}">${total}</span>`+
-      `<span class="stat-dim"> 10+${cur}${racial>0?"+"+racial+"r":""}${gearB>0?"+"+gearB+"g":""}</span>`;
-    const rngEl=document.getElementById("rng-"+s);
-    if(rngEl) rngEl.max=newMax;
+  STATS.forEach(s => {
+    const racial = race.b[s] || 0;
+    const cur = S.alloc[s] || 0;
+    const gearB = S.gear[s] || 0;
+    const total = 10 + cur + racial + gearB;
+    const maxA = 40;
+    const newMax = Math.min(maxA, cur + ptLeft);
+    const valEl = document.getElementById("sval-" + s);
+    if (valEl) valEl.innerHTML = `<span class="stat-bold" style="color:${SC[s]}">${total}</span>` +
+      `<span class="stat-dim"> 10+${cur}${racial > 0 ? "+" + racial + "r" : ""}${gearB > 0 ? "+" + gearB + "g" : ""}</span>`;
+    const rngEl = document.getElementById("rng-" + s);
+    if (rngEl) rngEl.max = newMax;
   });
 
   // Derived stats
