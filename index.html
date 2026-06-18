@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CU Stat Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0c0a06;color:#e8d9a0;font-family:Georgia,serif;font-size:14px;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#1a1208}
+::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:3px}
+select,input,button{font-family:Georgia,serif}
+input[type=range]{cursor:pointer;width:100%}
+input[type=number]::-webkit-inner-spin-button{opacity:1}
+optgroup{font-style:normal}
+option{color:#e8d9a0;background:#1a1510}
+
+#header{padding:10px 18px;display:flex;align-items:center;gap:16px;border-bottom:2px solid #c8991a;background:rgba(200,153,26,.08)}
+#header h1{font-size:16px;font-weight:bold;color:#c8991a;letter-spacing:.04em}
+#header p{font-size:11px;color:#7a6f5a}
+#faction-badge{margin-left:auto;font-size:11px;padding:2px 8px;border-radius:3px;border:1px solid rgba(200,153,26,.3);color:#c8991a}
+#reload-btn{font-size:10px;color:#7a6f5a;background:transparent;border:1px solid rgba(255,255,255,.1);padding:2px 8px;border-radius:3px;cursor:pointer;letter-spacing:.04em}
+#reload-btn:hover{color:#c8991a;border-color:rgba(200,153,26,.4)}
+#formula-ver{font-size:10px;color:#3a3020;letter-spacing:.03em}
+
+#tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3)}
+.tab{padding:9px 16px;border:none;background:none;cursor:pointer;font-family:Georgia,serif;font-size:12px;color:#7a6f5a;border-bottom:2px solid transparent;letter-spacing:.05em;text-transform:uppercase}
+.tab.active{color:#c8991a;border-bottom-color:#c8991a}
+
+#content{padding:14px;max-width:1080px;margin:0 auto}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.grid-gear{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px}
+.grid3s{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.grid2s{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+.card{border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,.03)}
+.slabel{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7a6f5a;margin-bottom:5px}
+
+select.field{background:#1a1510;color:#e8d9a0;border:1px solid rgba(255,255,255,.15);padding:6px 8px;border-radius:4px;font-size:13px;width:100%}
+input.field{background:#1a1510;color:#e8d9a0;border:1px solid rgba(255,255,255,.15);padding:5px 8px;border-radius:4px;width:100%}
+input.numsmall{width:50px;background:#1a1510;color:#e8d9a0;border:1px solid rgba(255,255,255,.12);padding:3px 5px;border-radius:4px;font-size:12px;text-align:center}
+.btn{font-size:11px;color:#7a6f5a;background:transparent;border:1px solid rgba(255,255,255,.12);padding:3px 10px;border-radius:3px;cursor:pointer;margin-top:8px}
+
+.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.stat-name{width:96px;font-size:12px;flex-shrink:0}
+.stat-range{flex:1;min-width:0}
+.stat-val{width:116px;text-align:right;font-size:12px;flex-shrink:0}
+.stat-bold{font-size:14px;font-weight:bold}
+.stat-dim{color:rgba(255,255,255,.3);font-size:10px}
+
+.dcard{background:rgba(0,0,0,.3);border-radius:6px;padding:9px 11px}
+.dlabel{font-size:10px;color:#7a6f5a;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.dvalue{font-size:18px;font-weight:bold}
+.ddriver{font-size:10px;color:rgba(255,255,255,.25);margin-top:2px}
+
+.pt-bar-bg{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:5px}
+.pt-bar{height:100%;border-radius:2px;transition:width .1s}
+
+.badge{font-size:11px;padding:2px 7px;border-radius:3px}
+.rank-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+.bp-cell{background:rgba(0,0,0,.3);border-radius:5px;padding:8px 6px;text-align:center;border:1px solid transparent}
+.bp-hi{border-color:rgba(255,255,255,.15)}
+.result-box{text-align:center;padding:10px;border-radius:6px;margin-top:8px}
+.info-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.chart-wrap{position:relative;width:100%;overflow:hidden}
+#tip{position:fixed;background:#1a1510;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:8px 12px;font-size:12px;pointer-events:none;display:none;z-index:100;white-space:nowrap}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0c0a06;z-index:200;font-size:14px;color:#7a6f5a;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div id="loading">LOADING FORMULAS…</div>
+<div id="header">
+  <h1>⚔ CU STAT DASHBOARD</h1>
+  <p>Camelot Unchained · Character Analysis Tool</p>
+  <span id="formula-ver"></span>
+  <button id="reload-btn" onclick="reloadFormulas()">↺ RELOAD FORMULAS</button>
+  <span id="faction-badge">Arthurian</span>
+</div>
+<div id="tabs">
+  <button class="tab active" onclick="showTab(0)">Build Planner</button>
+  <button class="tab" onclick="showTab(1)">Race Comparison</button>
+  <button class="tab" onclick="showTab(2)">Stat Scaling</button>
+  <button class="tab" onclick="showTab(3)">Gear Optimizer</button>
+</div>
+<div id="content"></div>
+<div id="tip"></div>
+
+<script>
+// ── Static race data ──────────────────────────────────────────────────────────
+// Racial and class stat bonuses are not in the formula API; they stay hardcoded here.
+const RACES = [
+  {id:"CaitSith",   name:"Cait Sith",        faction:"Arthurian",b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"Dvergr",     name:"Dvergr",            faction:"Viking",   b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:4,Will:3}},
+  {id:"Firbog",     name:"Firbog",            faction:"TDD",      b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:3,Spirit:4,Strength:0,Vitality:0,Will:0}},
+  {id:"Golem",      name:"Golem",             faction:"Arthurian",b:{Attunement:0,Command:0,Conviction:3,Dexterity:0,Endurance:4,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"Hamadryad",  name:"Hamadryad",         faction:"TDD",      b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"HumanA",     name:"Human (Arthurian)", faction:"Arthurian",b:{Attunement:2,Command:2,Conviction:2,Dexterity:2,Endurance:2,Spirit:2,Strength:2,Vitality:2,Will:2}},
+  {id:"HumanT",     name:"Human (TDD)",       faction:"TDD",      b:{Attunement:2,Command:2,Conviction:2,Dexterity:2,Endurance:2,Spirit:2,Strength:2,Vitality:2,Will:2}},
+  {id:"HumanV",     name:"Human (Viking)",    faction:"Viking",   b:{Attunement:2,Command:2,Conviction:2,Dexterity:2,Endurance:2,Spirit:2,Strength:2,Vitality:2,Will:2}},
+  {id:"Jotnar",     name:"Jotnar",            faction:"Viking",   b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:3,Spirit:0,Strength:4,Vitality:0,Will:0}},
+  {id:"Luchorpan",  name:"Luchorpan",         faction:"TDD",      b:{Attunement:0,Command:0,Conviction:3,Dexterity:4,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"Pict",       name:"Pict",              faction:"Arthurian",b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"Strm",       name:"St'rm",             faction:"Arthurian",b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+  {id:"Stormrider", name:"Stormrider",        faction:"Arthurian",b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:4,Strength:0,Vitality:0,Will:3}},
+  {id:"Valkyrie",   name:"Valkyrie",          faction:"Viking",   b:{Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}},
+];
+// ── Class/Archetype data ─────────────────────────────────────────────────────
+// Archetypes are cross-realm roles. Each has a different class name per faction.
+// Edit `b` for each archetype once class stat bonuses are known.
+const ARCHETYPES = [
+  {
+    archetype: "Fighter",
+    classes: { Arthurian: "Black Knight", Viking: "Mjölnir", TDD: "Fianna" },
+    b: {Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:10,Spirit:0,Strength:15,Vitality:20,Will:5}
+  },
+  {
+    archetype: "Healer",
+    classes: { Arthurian: "Physician", Viking: "Runehealer", TDD: "Empath" },
+    b: {Attunement:10,Command:0,Conviction:20,Dexterity:0,Endurance:0,Spirit:10,Strength:0,Vitality:5,Will:5}
+  },
+  {
+    archetype: "Warlock",
+    classes: { Arthurian: "Flame Warden", Viking: "Chaos Weaver", TDD: "Druid" },
+    b: {Attunement:20,Command:5,Conviction:0,Dexterity:0,Endurance:0,Spirit:15,Strength:0,Vitality:0,Will:10}
+  },
+  {
+    archetype: "Archer",
+    classes: { Arthurian: "Blackguard", Viking: "Winter's Shadow", TDD: "Forest Stalker" },
+    b: {Attunement:0,Command:5,Conviction:0,Dexterity:20,Endurance:0,Spirit:5,Strength:20,Vitality:0,Will:0}
+  },
+  {
+    archetype: "Assassin",
+    classes: { Arthurian: "Veilstalker", Viking: "Shadow Walker", TDD: "Red Cap" },
+    b: {Attunement:0,Command:10,Conviction:0,Dexterity:20,Endurance:0,Spirit:0,Strength:20,Vitality:0,Will:0}
+  },
+  {
+    archetype: "Bard",
+    classes: { Arthurian: "Minstrel", Viking: "Skald", TDD: "Dark Fool" },
+    b: {Attunement:5,Command:20,Conviction:0,Dexterity:10,Endurance:0,Spirit:5,Strength:10,Vitality:0,Will:0}
+  },
+  {
+    archetype: "Devout",
+    classes: { Arthurian: "Abbot", Viking: "Helbound", TDD: "Blessed Crow" },
+    b: {Attunement:0,Command:5,Conviction:15,Dexterity:0,Endurance:5,Spirit:0,Strength:15,Vitality:10,Will:0}
+  },
+  {
+    archetype: "Scout",
+    classes: { Arthurian: "Spectre", Viking: "Arisen", TDD: "Wisp" },
+    b: {Attunement:0,Command:0,Conviction:0,Dexterity:0,Endurance:0,Spirit:0,Strength:0,Vitality:0,Will:0}
+  },
+];
+
+const FC  = {Arthurian:"#cc3f3f", Viking:"#4a9edd", TDD:"#4a9e6a"};
+const SC  = {Attunement:"#9b6dff",Command:"#ff9940",Conviction:"#ff5577",Dexterity:"#40e0d0",Endurance:"#8ac840",Spirit:"#40c8ff",Strength:"#ff5040",Vitality:"#ff4060",Will:"#d040ff"};
+const TOTAL_PTS = 30;
+// Max stat value achievable through base + allocated points only (before racial/class bonuses).
+// With base=5, this means a maximum of 35 allocated points per stat.
+const MAX_STAT_PRE_BONUS = 40;
+
+// ── Formula Engine ────────────────────────────────────────────────────────────
+// Evaluates the dependency graph from stat_formulas.json.
+// Topological sort via DFS ensures each formula is evaluated after all its deps.
+class FormulaEngine {
+  constructor(json) {
+    this.version  = json.version;
+    this.primary  = json.primary;    // ["Vitality", ...]
+    this.gear     = json.gear;       // ["BonusHealth", ...]
+    this.baseVal  = json.baseValue;  // 10
+    this.formulas = json.formulas;   // { id: { expr, deps, name } }
+    this.ui       = json.ui;         // { groups, display }
+    this.evalOrder = this._topoSort();
+    // Pre-compile each expression into a Function for repeated fast evaluation
+    this._compiled = {};
+    for (const id of this.evalOrder) {
+      const expr = this.formulas[id].expr;
+      try {
+        this._compiled[id] = new Function('stats', `"use strict"; return (${expr});`);
+      } catch(e) {
+        console.error(`FormulaEngine: failed to compile '${id}': ${expr}`, e);
+        this._compiled[id] = () => NaN;
+      }
+    }
+  }
+
+  // DFS topological sort over the formula dependency graph.
+  // Primary stats and gear inputs have no formula entries; they act as roots.
+  _topoSort() {
+    const order    = [];
+    const visited  = new Set();
+    const visiting = new Set(); // grey set for cycle detection
+
+    const visit = (id) => {
+      if (visited.has(id))  return;
+      if (visiting.has(id)) throw new Error(`FormulaEngine: cycle detected at '${id}'`);
+      const f = this.formulas[id];
+      if (!f) return; // primary or gear input — leaf node, no formula to order
+      visiting.add(id);
+      for (const dep of f.deps) visit(dep);
+      visiting.delete(id);
+      visited.add(id);
+      order.push(id);
+    };
+
+    for (const id of Object.keys(this.formulas)) visit(id);
+    return order;
+  }
+
+  // Build a flat stats context starting from primary + gear values,
+  // then evaluate all formulas in dependency order.
+  evaluateAll(primaryStats, gearStats = {}) {
+    // ctx holds all stat values as evaluation proceeds
+    const ctx = { ...primaryStats, ...gearStats };
+    for (const id of this.evalOrder) {
+      ctx[id] = this._compiled[id](ctx);
+    }
+    return ctx;
+  }
+
+  // Convenience: evaluate a single named derived stat.
+  evaluate(id, primaryStats, gearStats = {}) {
+    return this.evaluateAll(primaryStats, gearStats)[id];
+  }
+
+  // Return display metadata for a given stat id, with safe fallback.
+  displayOf(id) {
+    return this.ui.display[id] || { label: id, format: "float2", driver: null };
+  }
+
+  // Return all displayed stat ids that are driven by a given primary stat.
+  displayedByDriver(primaryId) {
+    return Object.entries(this.ui.display)
+      .filter(([, d]) => d.driver === primaryId)
+      .map(([id]) => id);
+  }
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+// Formats a derived stat value based on the format type in the JSON display config.
+// "pct" type: the raw value is a fraction (0.0–1.0); multiply by 100 to display.
+function fmt(format, val) {
+  const v = parseFloat(val);
+  if (isNaN(v)) return "—";
+  switch (format) {
+    case "integer": return Math.round(v).toLocaleString();
+    case "float0":  return v.toFixed(0);
+    case "float2":  return v.toFixed(2);
+    case "float3":  return v.toFixed(3);
+    case "mult":    return v.toFixed(3) + "x";
+    case "pct":     return (v * 100).toFixed(2) + "%";
+    case "units":   return v.toFixed(1) + " u";
+    default:        return v.toFixed(2);
+  }
+}
+
+// ── Formula loading ───────────────────────────────────────────────────────────
+let engine = null; // FormulaEngine instance, null until loaded
+
+async function loadFormulas(bustCache = false) {
+  const url = 'stat_formulas.json' + (bustCache ? `?v=${Date.now()}` : '');
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to load stat_formulas.json: ${resp.status}`);
+  const json = await resp.json();
+  engine = new FormulaEngine(json);
+}
+
+async function reloadFormulas() {
+  const btn = document.getElementById('reload-btn');
+  if (btn) btn.textContent = '↺ LOADING…';
+  try {
+    await loadFormulas(true);
+    document.getElementById('formula-ver').textContent = 'v' + engine.version;
+    renderTab();
+  } catch (e) {
+    alert('Failed to reload formulas: ' + e.message);
+  } finally {
+    if (btn) btn.textContent = '↺ RELOAD FORMULAS';
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const zero = () => {};  // rebuilt after engine loads (needs primary list)
+let S = null;           // initialised in boot()
+
+function initState() {
+  const zeroStats = () => Object.fromEntries(engine.primary.map(s => [s, 0]));
+  const zeroGear  = () => Object.fromEntries(engine.gear.map(s => [s, 0]));
+  S = {
+    tab: 0,
+    raceId:      "CaitSith",
+    archetypeId: "Fighter",
+    alloc:       zeroStats(),
+    gear:        zeroGear(),
+    cmpAlloc:      zeroStats(),
+    cmpArchetypeId: "Fighter",
+    cmpDerived:    engine.ui.groups[0].stats[0],
+    scalePrimary: engine.primary[0],
+    scaleDerived: engine.ui.groups[0].stats[0],
+    optRaceId:      "CaitSith",
+    optArchetypeId: "Fighter",
+    optAlloc:       zeroStats(),
+    optDerived: engine.ui.groups[0].stats[0],
+    optTarget:  "",
+  };
+  // Snap scaleDerived to a stat actually driven by scalePrimary
+  const byDriver = engine.displayedByDriver(S.scalePrimary);
+  if (byDriver.length) S.scaleDerived = byDriver[0];
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getPrimaryStats(raceId, archetypeId, alloc, gear) {
+  const race = RACES.find(r => r.id === raceId);
+  const arch = ARCHETYPES.find(a => a.archetype === archetypeId);
+  const primary = Object.fromEntries(
+    engine.primary.map(s => [
+      s,
+      engine.baseVal
+        + (alloc[s] || 0)
+        + (race.b[s] || 0)
+        + (arch ? (arch.b[s] || 0) : 0)
+    ])
+  );
+  const gearStats = Object.fromEntries(engine.gear.map(s => [s, (gear || {})[s] || 0]));
+  return { ...primary, ...gearStats };
+}
+
+function hexRgb(h) {
+  return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`;
+}
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+function showTip(e,t){const el=document.getElementById("tip");el.style.display="block";el.textContent=t;el.style.left=(e.clientX+12)+"px";el.style.top=(e.clientY-28)+"px";}
+function hideTip(){document.getElementById("tip").style.display="none";}
+document.addEventListener("mousemove",e=>{const el=document.getElementById("tip");if(el.style.display!=="none"){el.style.left=(e.clientX+12)+"px";el.style.top=(e.clientY-28)+"px";}});
+
+// ── SVG Charts ────────────────────────────────────────────────────────────────
+function svgBar(data,W,H,lk,vk,colorFn,tipFn){
+  const PL=52,PR=10,PT=10,PB=62;
+  const cw=W-PL-PR,ch=H-PT-PB;
+  const vals=data.map(d=>d[vk]);
+  const mn=Math.min(...vals)*.98,mx=Math.max(...vals)*1.02;
+  const sy=v=>ch-((v-mn)/(mx-mn||1))*ch;
+  let out="";
+  for(let i=0;i<=4;i++){
+    const v=mn+(mx-mn)*i/4,y=PT+sy(v);
+    const l=v>=1000?(Math.round(v/100)/10)+"k":v.toFixed(v<10?2:1);
+    out+=`<line x1="${PL}" y1="${y}" x2="${PL+cw}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-dasharray="2 4"/>
+          <text x="${PL-4}" y="${y+4}" text-anchor="end" fill="#7a6f5a" font-size="9" font-family="Georgia,serif">${l}</text>`;
+  }
+  const bw=Math.max(4,Math.floor(cw/data.length)-3);
+  const gap=(cw-bw*data.length)/(data.length+1);
+  data.forEach((d,i)=>{
+    const x=PL+gap+i*(bw+gap);
+    const bh=Math.max(1,((d[vk]-mn)/(mx-mn||1))*ch);
+    const col=colorFn(d);
+    const tip=(tipFn?tipFn(d):`${d[lk]}: ${d[vk].toLocaleString(undefined,{maximumFractionDigits:2})}`).replace(/'/g,"&#39;");
+    out+=`<rect x="${x}" y="${PT+ch-bh}" width="${bw}" height="${bh}" fill="${col}" rx="2"/>
+          <text x="${x+bw/2}" y="${H-PB+14}" text-anchor="end" fill="#7a6f5a" font-size="9" font-family="Georgia,serif" transform="rotate(-45,${x+bw/2},${H-PB+14})">${d[lk]}</text>
+          <rect x="${x}" y="${PT}" width="${bw}" height="${ch}" fill="transparent" style="cursor:pointer" onmouseenter="showTip(event,'${tip}')" onmouseleave="hideTip()"/>`;
+  });
+  out+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+ch}" stroke="rgba(255,255,255,.15)"/>`;
+  return`<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`;
+}
+
+function svgLine(data,W,H,xk,yk,color,refY,xLabel){
+  const PL=52,PR=52,PT=10,PB=34;
+  const cw=W-PL-PR,ch=H-PT-PB;
+  const vals=data.map(d=>d[yk]);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const pad=(mx-mn)*.06;
+  const lo=mn-pad,hi=mx+pad;
+  const sx=i=>PL+i*(cw/(data.length-1));
+  const sy=v=>PT+ch-((v-lo)/(hi-lo||1))*ch;
+  let out="";
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4,y=sy(v);
+    const l=v>=1000?(Math.round(v/100)/10)+"k":v.toFixed(v<2?3:1);
+    out+=`<line x1="${PL}" y1="${y}" x2="${PL+cw}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-dasharray="2 4"/>
+          <text x="${PL-4}" y="${y+4}" text-anchor="end" fill="#7a6f5a" font-size="9" font-family="Georgia,serif">${l}</text>`;
+  }
+  if(refY!=null&&!isNaN(refY)){
+    const ry=sy(refY);
+    if(ry>=PT&&ry<=PT+ch){
+      out+=`<line x1="${PL}" y1="${ry}" x2="${PL+cw}" y2="${ry}" stroke="#ff9940" stroke-dasharray="5 4"/>
+            <text x="${PL+cw+4}" y="${ry+4}" fill="#ff9940" font-size="9" font-family="Georgia,serif">Target</text>`;
+    }
+  }
+  const step=Math.ceil(data.length/8);
+  const lastStepIdx=Math.floor((data.length-1)/step)*step;
+  const lastIdx=data.length-1;
+  const tooClose=(lastIdx-lastStepIdx)<Math.ceil(step/2);
+  data.forEach((d,i)=>{
+    const isStep=i%step===0,isLast=i===lastIdx;
+    const skipThisStep=isStep&&(i===lastStepIdx)&&tooClose;
+    if((isStep&&!skipThisStep)||isLast)
+      out+=`<text x="${sx(i)}" y="${PT+ch+14}" text-anchor="middle" fill="#7a6f5a" font-size="9" font-family="Georgia,serif">${d[xk]}</text>`;
+  });
+  if(xLabel)out+=`<text x="${PL+cw/2}" y="${H-2}" text-anchor="middle" fill="#7a6f5a" font-size="9" font-family="Georgia,serif">${xLabel}</text>`;
+  const pts=data.map((d,i)=>`${i===0?"M":"L"}${sx(i).toFixed(1)},${sy(d[yk]).toFixed(1)}`).join(" ");
+  out+=`<path d="${pts}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  data.forEach((d,i)=>{
+    const tv=d[yk]>=1000?Math.round(d[yk]).toLocaleString():d[yk].toFixed(3);
+    const tip=`${d[xk]}: ${tv}`.replace(/'/g,"&#39;");
+    out+=`<rect x="${sx(i)-6}" y="${PT}" width="12" height="${ch}" fill="transparent" style="cursor:crosshair" onmouseenter="showTip(event,'${tip}')" onmouseleave="hideTip()"/>`;
+  });
+  out+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+ch}" stroke="rgba(255,255,255,.15)"/>`;
+  return`<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`;
+}
+
+// ── Tab 0: Build Planner ──────────────────────────────────────────────────────
+function buildPlannerHTML() {
+  const race  = RACES.find(r => r.id === S.raceId);
+  const fc    = FC[race.faction];
+  const fcRgb = hexRgb(fc);
+
+  let raceOpts = "";
+  ["Arthurian","Viking","TDD"].forEach(f => {
+    raceOpts += `<optgroup label="── ${f} ──" style="color:${FC[f]}">`;
+    RACES.filter(r => r.faction === f).forEach(r => {
+      raceOpts += `<option value="${r.id}"${r.id === S.raceId ? " selected" : ""}>${r.name}</option>`;
+    });
+    raceOpts += "</optgroup>";
+  });
+
+  const bonuses = Object.entries(race.b).filter(([,v]) => v > 0);
+  const badges  = bonuses.length
+    ? bonuses.map(([k,v]) => `<span class="badge" style="color:${SC[k]};background:${SC[k]}22">+${v} ${k.slice(0,4)}</span>`).join("")
+    : `<span style="font-size:11px;color:#7a6f5a">No racial bonuses</span>`;
+
+  const arch    = ARCHETYPES.find(a => a.archetype === S.archetypeId);
+  // Class bonus counts against the ceiling (floor raised, ceiling fixed):
+  //   alloc ≤ MAX_STAT_PRE_BONUS - base - class_bonus
+  // Racial is symmetric (raises both), so it does not reduce allocatable range.
+  const maxAllocFor = s => MAX_STAT_PRE_BONUS - engine.baseVal - (arch ? (arch.b[s] || 0) : 0);
+  const ptUsed   = Object.values(S.alloc).reduce((a,b) => a+b, 0);
+  const ptLeft   = TOTAL_PTS - ptUsed;
+
+  let statRows = "";
+  engine.primary.forEach(s => {
+    const racial  = race.b[s] || 0;
+    const cls     = arch ? (arch.b[s] || 0) : 0;
+    const cur     = S.alloc[s] || 0;
+    const total   = engine.baseVal + cur + racial + cls;
+    const maxRange = Math.min(maxAllocFor(s), cur + ptLeft);
+    const dimParts = `${engine.baseVal}+${cur}${racial>0?"+"+racial+"r":""}${cls>0?"+"+cls+"c":""}`;
+    statRows += `
+      <div class="stat-row">
+        <span class="stat-name" style="color:${SC[s]}">${s}</span>
+        <input type="range" class="stat-range" id="rng-${s}" min="0" max="${maxRange}" value="${cur}"
+          style="accent-color:${SC[s]}" oninput="onSlider('${s}',+this.value)"/>
+        <span class="stat-val" id="sval-${s}">
+          <span class="stat-bold" style="color:${SC[s]}">${total}</span>
+          <span class="stat-dim"> ${dimParts}</span>
+        </span>
+      </div>`;
+  });
+
+  let gearInputs = "";
+  engine.gear.forEach(s => {
+    gearInputs += `<div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:10px;color:${SC[s] || "#e8d9a0"};width:90px;flex-shrink:0">${s}</span>
+      <input type="number" class="numsmall" min="0" max="200" value="${S.gear[s] || 0}"
+        oninput="onGear('${s}', +this.value)"/>
+    </div>`;
+  });
+
+  const ctx     = getPrimaryStats(S.raceId, S.archetypeId, S.alloc, S.gear);
+  const derived = engine.evaluateAll(ctx);
+
+  function makeGroup(g) {
+    let cards = "";
+    g.stats.forEach(id => {
+      const disp   = engine.displayOf(id);
+      const accent = disp.driver ? (SC[disp.driver] || "#e8d9a0") : "#e8d9a0";
+      const safeId = id.replace(/[^a-z0-9]/gi, "_");
+      cards += `<div class="dcard">
+        <div class="dlabel">${disp.label}</div>
+        <div class="dvalue" id="dv-${safeId}" style="color:${accent}">${fmt(disp.format, derived[id])}</div>
+        ${disp.driver
+          ? `<div class="ddriver" id="dd-${safeId}">${disp.driver} (${ctx[disp.driver] ?? "?"})</div>`
+          : ""}
+      </div>`;
+    });
+    return `<div class="card"><div class="slabel">${g.label}</div><div class="grid2s">${cards}</div></div>`;
+  }
+
+  const groups  = engine.ui.groups;
+  const mid     = Math.ceil(groups.length / 2);
+  const leftCol  = groups.slice(0, mid).map(makeGroup).join("");
+  const rightCol = groups.slice(mid).map(makeGroup).join("");
+
+  const ptPct  = Math.min(100, ptUsed / TOTAL_PTS * 100);
+  const ptColor = ptLeft < 0 ? "#e24b4a" : ptLeft === 0 ? "#e8d9a0" : "#4a9e6a";
+
+  return `<div class="grid2">
+    <div>
+      <div class="card" style="border-color:rgba(${fcRgb},.25);background:rgba(${fcRgb},.06)">
+        <div class="grid2s" style="gap:10px">
+          <div>
+            <div class="slabel">Race</div>
+            <select class="field" onchange="S.raceId=this.value;S.alloc=Object.fromEntries(engine.primary.map(s=>[s,0]));renderTab()">
+              ${raceOpts}
+            </select>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${badges}</div>
+          </div>
+          <div>
+            <div class="slabel">Class</div>
+            <select class="field" id="archetype-sel" onchange="S.archetypeId=this.value;renderTab()">
+              ${ARCHETYPES.map(a => {
+                const cls = a.classes[race.faction];
+                const label = cls ? `${cls} (${a.archetype})` : a.archetype;
+                return `<option value="${a.archetype}"${a.archetype===S.archetypeId?' selected':''}>${label}</option>`;
+              }).join('')}
+            </select>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${arch ? Object.entries(arch.b).filter(([,v])=>v>0).map(([k,v])=>`<span class="badge" style="color:${SC[k]};background:${SC[k]}22">+${v} ${k.slice(0,4)}</span>`).join('') || '<span style="font-size:11px;color:#7a6f5a">No class bonuses</span>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:#7a6f5a;text-transform:uppercase;letter-spacing:.06em">Points: <span id="pt-used">${ptUsed}</span> / ${TOTAL_PTS}</span>
+          <span id="pt-left" style="font-size:15px;font-weight:bold;color:${ptColor}">${ptLeft} left</span>
+        </div>
+        <div class="pt-bar-bg"><div class="pt-bar" id="pt-bar" style="width:${ptPct}%;background:${fc}"></div></div>
+      </div>
+      <div class="card">
+        <div class="slabel">Primary Stats</div>
+        ${statRows}
+        <button class="btn" onclick="S.alloc=Object.fromEntries(engine.primary.map(s=>[s,0]));renderTab()">Reset points</button>
+      </div>
+      <div class="card">
+        <div class="slabel">Gear Stat Bonuses (total across all slots)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${gearInputs}</div>
+        <button class="btn" onclick="S.gear=Object.fromEntries(engine.gear.map(s=>[s,0]));renderTab()">Clear gear</button>
+      </div>
+    </div>
+    <div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+        <div id="derived-left">${leftCol}</div>
+        <div id="derived-right">${rightCol}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function onSlider(s, v) {
+  const ptUsed = Object.values(S.alloc).reduce((a,b) => a+b, 0);
+  const ptLeft = TOTAL_PTS - ptUsed;
+  const delta  = v - (S.alloc[s] || 0);
+  if (delta > 0 && delta > ptLeft) {
+    const el = document.getElementById("rng-" + s);
+    if (el) el.value = S.alloc[s] || 0;
+    return;
+  }
+  const arch = ARCHETYPES.find(a => a.archetype === S.archetypeId);
+  const cap   = MAX_STAT_PRE_BONUS - engine.baseVal - (arch ? (arch.b[s] || 0) : 0);
+  S.alloc[s]  = Math.max(0, Math.min(cap, v));
+  updateBuildDisplay();
+}
+
+function onGear(s, v) {
+  S.gear[s] = Math.max(0, Math.min(200, v || 0));
+  updateBuildDisplay();
+}
+
+// Patches only display nodes on stat changes — avoids full re-render jank.
+function updateBuildDisplay() {
+  const race   = RACES.find(r => r.id === S.raceId);
+  const fc     = FC[race.faction];
+  const ptUsed = Object.values(S.alloc).reduce((a,b) => a+b, 0);
+  const ptLeft = TOTAL_PTS - ptUsed;
+  const ptPct  = Math.min(100, ptUsed / TOTAL_PTS * 100);
+  const ptColor = ptLeft < 0 ? "#e24b4a" : ptLeft === 0 ? "#e8d9a0" : "#4a9e6a";
+
+  const elUsed = document.getElementById("pt-used");
+  const elLeft = document.getElementById("pt-left");
+  const elBar  = document.getElementById("pt-bar");
+  if (elUsed) elUsed.textContent = ptUsed;
+  if (elLeft) { elLeft.textContent = ptLeft + " left"; elLeft.style.color = ptColor; }
+  if (elBar)  { elBar.style.width = ptPct + "%"; elBar.style.background = ptLeft < 0 ? "#e24b4a" : fc; }
+
+  const arch = ARCHETYPES.find(a => a.archetype === S.archetypeId);
+  engine.primary.forEach(s => {
+    const racial  = race.b[s] || 0;
+    const cls     = arch ? (arch.b[s] || 0) : 0;
+    const cur     = S.alloc[s] || 0;
+    const total   = engine.baseVal + cur + racial + cls;
+    // Class bonus pre-fills allocation room; racial does not (it raises ceiling equally).
+    const cap     = MAX_STAT_PRE_BONUS - engine.baseVal - cls;
+    const newMax  = Math.min(cap, cur + ptLeft);
+    const dimParts = `${engine.baseVal}+${cur}${racial > 0 ? "+" + racial + "r" : ""}${cls > 0 ? "+" + cls + "c" : ""}`;
+    const valEl   = document.getElementById("sval-" + s);
+    if (valEl) valEl.innerHTML =
+      `<span class="stat-bold" style="color:${SC[s]}">${total}</span>` +
+      `<span class="stat-dim"> ${dimParts}</span>`;
+    const rngEl = document.getElementById("rng-" + s);
+    if (rngEl) rngEl.max = newMax;
+  });
+
+  const ctx     = getPrimaryStats(S.raceId, S.archetypeId, S.alloc, S.gear);
+  const derived = engine.evaluateAll(ctx);
+
+  engine.ui.groups.forEach(g => {
+    g.stats.forEach(id => {
+      const disp  = engine.displayOf(id);
+      const safeId = id.replace(/[^a-z0-9]/gi, "_");
+      const vEl  = document.getElementById("dv-" + safeId);
+      if (vEl) vEl.textContent = fmt(disp.format, derived[id]);
+      const dEl  = document.getElementById("dd-" + safeId);
+      if (dEl && disp.driver) dEl.textContent = disp.driver + " (" + (ctx[disp.driver] ?? "?") + ")";
+    });
+  });
+}
+
+// ── Tab 1: Race Comparison ────────────────────────────────────────────────────
+function raceCmpHTML() {
+  const cmpData = buildCmpData();
+  // Dropdown: all displayed derived stats
+  const allDisplayed = engine.ui.groups.flatMap(g => g.stats);
+  let dOpts = allDisplayed.map(id => {
+    const lbl = engine.displayOf(id).label;
+    return `<option value="${id}"${id === S.cmpDerived ? " selected" : ""}>${lbl}</option>`;
+  }).join("");
+
+  const maxAlloc = MAX_STAT_PRE_BONUS - engine.baseVal;
+  const cmpArchOpts = ARCHETYPES.map(a =>
+    `<option value="${a.archetype}"${a.archetype===S.cmpArchetypeId?' selected':''}>${a.archetype}</option>`
+  ).join('');
+  let aInputs = engine.primary.map(s => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <span style="font-size:10px;color:${SC[s]}">${s.slice(0,4)}</span>
+      <input type="number" class="numsmall" min="0" max="${maxAlloc}" value="${S.cmpAlloc[s]||0}"
+        oninput="S.cmpAlloc['${s}']=Math.max(0,Math.min(${maxAlloc},+this.value||0));refreshCmpChart()"/>
+    </div>`).join("");
+
+  const fRanks = ["Arthurian","Viking","TDD"].map(f => {
+    const rows = cmpData.filter(d => d.faction === f).map(r => {
+      const rank = cmpData.indexOf(r) + 1;
+      const disp = engine.displayOf(S.cmpDerived);
+      const vs   = fmt(disp.format, r.value);
+      return `<div class="rank-row"><span style="color:#7a6f5a">#${rank} ${r.short}</span><span style="color:${FC[f]}">${vs}</span></div>`;
+    }).join("");
+    return `<div class="card"><div class="slabel" style="color:${FC[f]}">${f}</div>${rows}</div>`;
+  }).join("");
+
+  const disp = engine.displayOf(S.cmpDerived);
+  return `<div>
+    <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div class="slabel">Derived Stat</div>
+        <select class="field" style="width:auto" onchange="S.cmpDerived=this.value;renderTab()">${dOpts}</select>
+      </div>
+      <div style="min-width:160px">
+        <div class="slabel">Archetype</div>
+        <select class="field" style="width:auto" onchange="S.cmpArchetypeId=this.value;renderTab()">${cmpArchOpts}</select>
+      </div>
+      <div style="flex:1">
+        <div class="slabel">Shared Point Allocation (applied to all races)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${aInputs}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="slabel">All Races — ${disp.label}</div>
+      <div class="chart-wrap" id="cmp-chart">${renderCmpChart(cmpData)}</div>
+    </div>
+    <div class="grid3">${fRanks}</div>
+  </div>`;
+}
+
+function buildCmpData() {
+  const disp = engine.displayOf(S.cmpDerived);
+  return RACES.map(r => {
+    const ctx = getPrimaryStats(r.id, S.cmpArchetypeId, S.cmpAlloc, {});
+    const all = engine.evaluateAll(ctx);
+    return {
+      name:    r.name,
+      short:   r.name.replace(" (Arthurian)","").replace(" (Viking)","").replace(" (TDD)",""),
+      value:   all[S.cmpDerived] ?? 0,
+      faction: r.faction,
+      format:  disp.format,
+    };
+  }).sort((a,b) => b.value - a.value);
+}
+
+function renderCmpChart(data) {
+  return svgBar(data, 680, 300, "short", "value",
+    d => FC[d.faction],
+    d => `${d.short}: ${fmt(d.format, d.value)}`
+  );
+}
+
+function refreshCmpChart() {
+  const el = document.getElementById("cmp-chart");
+  if (!el) return;
+  el.innerHTML = renderCmpChart(buildCmpData());
+}
+
+// ── Tab 2: Stat Scaling ───────────────────────────────────────────────────────
+function scaleHTML() {
+  // Only show derived stats that are driven by the selected primary
+  const avail = engine.displayedByDriver(S.scalePrimary);
+  if (!avail.includes(S.scaleDerived)) S.scaleDerived = avail[0] || "";
+
+  let pOpts = engine.primary.map(s =>
+    `<option${s === S.scalePrimary ? " selected" : ""}>${s}</option>`).join("");
+  let dOpts = avail.map(id => {
+    const lbl = engine.displayOf(id).label;
+    return `<option value="${id}"${id === S.scaleDerived ? " selected" : ""}>${lbl}</option>`;
+  }).join("");
+
+  if (!S.scaleDerived) {
+    return `<div><div class="card" style="color:#7a6f5a">No displayed stats are driven by ${S.scalePrimary}.</div></div>`;
+  }
+
+  const disp = engine.displayOf(S.scaleDerived);
+  const color = SC[S.scalePrimary] || "#c8991a";
+
+  // Build a neutral baseline: all primaries at baseVal, scan the selected primary 10→50
+  const lineData = Array.from({length: 41}, (_,i) => i + engine.baseVal).map(v => {
+    const base = Object.fromEntries(engine.primary.map(s => [s, engine.baseVal]));
+    const gear  = Object.fromEntries(engine.gear.map(s => [s, 0]));
+    base[S.scalePrimary] = v;
+    const all = engine.evaluateAll({ ...base, ...gear });
+    const raw = all[S.scaleDerived] ?? 0;
+    // Store the display-formatted number as a raw number for the chart
+    const displayVal = disp.format === "pct" ? raw * 100 : raw;
+    return { stat: v, value: displayVal };
+  });
+
+  const bps = [10,15,20,25,30,35,40,45,50];
+  const bpCells = bps.map(v => {
+    const base = Object.fromEntries(engine.primary.map(s => [s, engine.baseVal]));
+    const gear  = Object.fromEntries(engine.gear.map(s => [s, 0]));
+    base[S.scalePrimary] = v;
+    const all = engine.evaluateAll({ ...base, ...gear });
+    const val = all[S.scaleDerived] ?? 0;
+    const hi  = v === 50;
+    return `<div class="bp-cell${hi ? " bp-hi" : ""}" style="${hi ? "background:"+color+"22;border-color:"+color+"55" : ""}">
+      <div style="color:${color};font-size:13px;font-weight:bold">${v}</div>
+      <div style="font-size:11px;margin-top:2px">${fmt(disp.format, val)}</div>
+    </div>`;
+  }).join("");
+
+  const mgCells = [10,15,20,25,30,35,40,45].map(v => {
+    const mkBase = val => {
+      const base = Object.fromEntries(engine.primary.map(s => [s, engine.baseVal]));
+      const gear  = Object.fromEntries(engine.gear.map(s => [s, 0]));
+      base[S.scalePrimary] = val;
+      return engine.evaluateAll({ ...base, ...gear })[S.scaleDerived] ?? 0;
+    };
+    const gain = mkBase(v + 1) - mkBase(v);
+    return `<div class="bp-cell">
+      <div style="color:#7a6f5a;font-size:10px">${v}→${v+1}</div>
+      <div style="color:${color};font-size:12px;margin-top:2px">+${Math.abs(gain).toFixed(3)}</div>
+    </div>`;
+  }).join("");
+
+  return `<div>
+    <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+      <div>
+        <div class="slabel">Primary Stat</div>
+        <select class="field" style="width:auto" onchange="S.scalePrimary=this.value;S.scaleDerived=engine.displayedByDriver(this.value)[0]||'';renderTab()">${pOpts}</select>
+      </div>
+      <div>
+        <div class="slabel">Derived Stat</div>
+        <select class="field" style="width:auto" onchange="S.scaleDerived=this.value;renderTab()">${dOpts}</select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="slabel">${S.scalePrimary} → ${disp.label} (all other stats at ${engine.baseVal})</div>
+      <div class="chart-wrap">${svgLine(lineData, 700, 260, "stat", "value", color, null, S.scalePrimary)}</div>
+    </div>
+    <div class="slabel" style="margin-bottom:6px">Breakpoints (10 → 50)</div>
+    <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-bottom:14px">${bpCells}</div>
+    <div class="slabel" style="margin-bottom:6px">Marginal gain per point</div>
+    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">${mgCells}</div>
+  </div>`;
+}
+
+// ── Tab 3: Gear Optimizer ─────────────────────────────────────────────────────
+function gearOptHTML() {
+  const disp      = engine.displayOf(S.optDerived);
+  const optDriver = disp.driver || engine.primary[0];
+  const optRace   = RACES.find(r => r.id === S.optRaceId);
+  const fc        = FC[optRace.faction];
+  const color     = SC[optDriver] || "#c8991a";
+
+  // Check if driver is a gear-injectable stat vs a primary stat
+  const driverIsGear = engine.gear.includes(optDriver);
+
+  const baseCtx  = getPrimaryStats(S.optRaceId, S.optArchetypeId, S.optAlloc, {});
+  const baseLine = +(engine.evaluate(S.optDerived, baseCtx) ?? 0);
+  const tgt      = parseFloat(S.optTarget);
+
+  // Compute how much gear bonus in optDriver is needed to reach target
+  let gearNeeded = null;
+  if (!isNaN(tgt)) {
+    if (baseLine >= tgt) {
+      gearNeeded = 0;
+    } else {
+      for (let g = 1; g <= 200; g++) {
+        const gearOverride = {};
+        if (driverIsGear) {
+          gearOverride[optDriver] = g;
+        } else {
+          const testCtx = { ...baseCtx, [optDriver]: baseCtx[optDriver] + g };
+          const val = engine.evaluate(S.optDerived, testCtx);
+          if (val >= tgt) { gearNeeded = g; break; }
+          continue;
+        }
+        const testCtx = getPrimaryStats(S.optRaceId, S.optArchetypeId, S.optAlloc, gearOverride);
+        if (engine.evaluate(S.optDerived, testCtx) >= tgt) { gearNeeded = g; break; }
+      }
+      if (gearNeeded === null) gearNeeded = ">200";
+    }
+  }
+
+  const optMaxAlloc = MAX_STAT_PRE_BONUS - engine.baseVal;
+  let rOpts  = RACES.map(r => `<option value="${r.id}"${r.id === S.optRaceId ? " selected" : ""}>${r.name} (${r.faction})</option>`).join("");
+  const optArchOpts = ARCHETYPES.map(a =>
+    `<option value="${a.archetype}"${a.archetype===S.optArchetypeId?' selected':''}>${a.archetype}</option>`
+  ).join('');
+  const allDisplayed = engine.ui.groups.flatMap(g => g.stats);
+  let dOpts  = allDisplayed.map(id => {
+    const lbl = engine.displayOf(id).label;
+    return `<option value="${id}"${id === S.optDerived ? " selected" : ""}>${lbl}</option>`;
+  }).join("");
+  let aInputs = engine.primary.map(s => `<div style="display:flex;align-items:center;gap:4px">
+    <span style="font-size:10px;color:${SC[s]};width:80px;flex-shrink:0">${s}</span>
+    <input type="number" class="numsmall" min="0" max="${optMaxAlloc}" value="${S.optAlloc[s]||0}"
+      oninput="S.optAlloc['${s}']=Math.max(0,Math.min(${optMaxAlloc},+this.value||0));renderTab()"/>
+  </div>`).join("");
+
+  // Chart: derived stat value vs gear bonus in optDriver (0..50)
+  const chartData = Array.from({length: 51}, (_,i) => i).map(g => {
+    let ctx;
+    if (driverIsGear) {
+      const gearOverride = {};
+      gearOverride[optDriver] = g;
+      ctx = getPrimaryStats(S.optRaceId, S.optArchetypeId, S.optAlloc, gearOverride);
+    } else {
+      ctx = { ...baseCtx, [optDriver]: baseCtx[optDriver] + g };
+    }
+    const val = engine.evaluate(S.optDerived, ctx) ?? 0;
+    return { stat: "+" + g, value: +(val.toFixed ? val.toFixed(4) : val) };
+  });
+
+  const bpCells = [0,5,10,15,20,25,30,35,40,50].map(g => {
+    let ctx;
+    if (driverIsGear) {
+      const gearOverride = {};
+      gearOverride[optDriver] = g;
+      ctx = getPrimaryStats(S.optRaceId, S.optArchetypeId, S.optAlloc, gearOverride);
+    } else {
+      ctx = { ...baseCtx, [optDriver]: baseCtx[optDriver] + g };
+    }
+    const val = engine.evaluate(S.optDerived, ctx) ?? 0;
+    const hit = !isNaN(tgt) && val >= tgt;
+    return `<div class="bp-cell" style="${hit ? "background:rgba(74,158,106,.12);border-color:#4a9e6a55" : ""}">
+      <div style="color:${color};font-size:11px;font-weight:bold">+${g}</div>
+      <div style="color:${hit ? "#4a9e6a" : "#e8d9a0"};font-size:11px;margin-top:2px">${fmt(disp.format, val)}</div>
+    </div>`;
+  }).join("");
+
+  const effCells = [5,10,15,20,25,30,35,40,45,50].map(g => {
+    const mkVal = bonus => {
+      let ctx;
+      if (driverIsGear) {
+        const go = {};
+        go[optDriver] = bonus;
+        ctx = getPrimaryStats(S.optRaceId, S.optArchetypeId, S.optAlloc, go);
+      } else {
+        ctx = { ...baseCtx, [optDriver]: baseCtx[optDriver] + bonus };
+      }
+      return engine.evaluate(S.optDerived, ctx) ?? 0;
+    };
+    const gain = mkVal(g) - mkVal(g - 5);
+    return `<div class="bp-cell">
+      <div style="color:#7a6f5a;font-size:10px">${g-5}→${g}</div>
+      <div style="color:${color};font-size:12px;margin-top:2px">+${gain >= 100 ? Math.round(gain).toLocaleString() : gain.toFixed(3)}</div>
+    </div>`;
+  }).join("");
+
+  let resultBox = "";
+  if (!isNaN(tgt) && gearNeeded !== null) {
+    resultBox = gearNeeded === 0
+      ? `<div style="color:#4a9e6a;font-size:13px;padding:8px;background:rgba(74,158,106,.1);border-radius:4px;text-align:center">Already at or above target!</div>`
+      : `<div class="result-box" style="background:${fc}18;border:1px solid ${fc}40">
+          <div style="font-size:11px;color:#7a6f5a;margin-bottom:2px">Gear bonus needed (${optDriver})</div>
+          <div style="font-size:32px;font-weight:bold;color:${color}">${gearNeeded === ">200" ? ">200" : "+" + gearNeeded}</div>
+          <div style="font-size:10px;color:#7a6f5a">spread across gear slots</div>
+        </div>`;
+  }
+
+  return `<div class="grid-gear">
+    <div>
+      <div class="card">
+        <div class="slabel">Base Build</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <div class="slabel">Race</div>
+            <select class="field" onchange="S.optRaceId=this.value;renderTab()">${rOpts}</select>
+          </div>
+          <div>
+            <div class="slabel">Archetype</div>
+            <select class="field" onchange="S.optArchetypeId=this.value;renderTab()">${optArchOpts}</select>
+          </div>
+        </div>
+        <div class="slabel">Allocated Stats</div>
+        <div class="grid2s" style="gap:5px">${aInputs}</div>
+      </div>
+      <div class="card">
+        <div class="slabel">Optimization Target</div>
+        <div style="margin-bottom:10px">
+          <div class="slabel">Derived Stat</div>
+          <select class="field" onchange="S.optDerived=this.value;S.optTarget='';renderTab()">${dOpts}</select>
+        </div>
+        <div style="margin-bottom:10px">
+          <div class="slabel">Target Value</div>
+          <input type="number" class="field" value="${S.optTarget}" placeholder="Current: ${fmt(disp.format, baseLine)}"
+            onchange="S.optTarget=this.value;renderTab()"/>
+        </div>
+        <div style="background:rgba(0,0,0,.3);border-radius:6px;padding:10px 12px">
+          <div class="info-row"><span style="color:#7a6f5a">Baseline (no gear)</span><span>${fmt(disp.format, baseLine)}</span></div>
+          <div class="info-row" style="margin-bottom:10px"><span style="color:#7a6f5a">Key driver</span><span style="color:${color}">${optDriver}</span></div>
+          ${resultBox}
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="slabel">${disp.label} vs +${optDriver} bonus</div>
+        <div class="chart-wrap">${svgLine(chartData, 500, 240, "stat", "value", color, isNaN(tgt) ? null : tgt, "+" + optDriver)}</div>
+      </div>
+      <div class="card">
+        <div class="slabel">Value at key gear breakpoints</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px">${bpCells}</div>
+      </div>
+      <div class="card">
+        <div class="slabel">Efficiency — gain per +5 ${optDriver}</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">${effCells}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Routing ───────────────────────────────────────────────────────────────────
+let currentTab = 0;
+function showTab(i) {
+  currentTab = i;
+  document.querySelectorAll(".tab").forEach((t,j) => t.classList.toggle("active", i === j));
+  renderTab();
+}
+
+function renderTab() {
+  if (!engine) return;
+  const race   = RACES.find(r => r.id === S.raceId);
+  const fc     = FC[race.faction];
+  const fcRgb  = hexRgb(fc);
+  const hdr    = document.getElementById("header");
+  hdr.style.borderBottomColor = fc;
+  hdr.style.background = `rgba(${fcRgb},.08)`;
+  const badge  = document.getElementById("faction-badge");
+  badge.textContent = race.faction;
+  badge.style.color = fc;
+  badge.style.borderColor = fc + "44";
+  document.querySelectorAll(".tab").forEach((t,i) => {
+    t.style.color = i === currentTab ? fc : "#7a6f5a";
+    t.style.borderBottomColor = i === currentTab ? fc : "transparent";
+  });
+
+  const el = document.getElementById("content");
+  switch (currentTab) {
+    case 0: el.innerHTML = buildPlannerHTML(); break;
+    case 1: el.innerHTML = raceCmpHTML();      break;
+    case 2: el.innerHTML = scaleHTML();        break;
+    case 3: el.innerHTML = gearOptHTML();      break;
+  }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    await loadFormulas();
+    initState();
+    document.getElementById("formula-ver").textContent = "v" + engine.version;
+    document.getElementById("loading").style.display = "none";
+    renderTab();
+  } catch (e) {
+    document.getElementById("loading").textContent = "Failed to load formulas: " + e.message;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>

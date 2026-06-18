@@ -27,7 +27,8 @@ jobs:
       - name: Copy HTML to root
         run: |
           mkdir -p artifacts
-          cp "cu_stat_dashboard (7).html" artifacts/index.html
+          cp index.html artifacts/index.html
+          cp stat_formulas.json artifacts/stat_formulas.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

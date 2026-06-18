@@ -1,0 +1,875 @@
+{
+  "version": "2026-06-16",
+  "primary": [
+    "Attunement",
+    "Command",
+    "Conviction",
+    "Dexterity",
+    "Endurance",
+    "Spirit",
+    "Strength",
+    "Vitality",
+    "Will"
+  ],
+  "gear": [
+    "BonusHealth",
+    "BonusGutsValue",
+    "BonusGutsThreshold",
+    "BonusEvasionChance",
+    "BaseBlockValue"
+  ],
+  "baseValue": 5,
+  "formulas": {
+    "MoveAcceleration": {
+      "name": "Move Acceleration",
+      "expr": "60",
+      "deps": []
+    },
+    "MaxMoveSpeed": {
+      "name": "Movement Speed",
+      "expr": "9",
+      "deps": []
+    },
+    "MagicArmorMultiplier": {
+      "name": "Magic Armor Multiplier",
+      "expr": "1 - (0.003 * stats.MagicArmorRating) / (1 + 0.003 * stats.MagicArmorRating)",
+      "deps": [
+        "MagicArmorRating"
+      ]
+    },
+    "EvasionMultiplier": {
+      "name": "Evasion Multiplier",
+      "expr": "0",
+      "deps": []
+    },
+    "HealthRegenerationIncrease": {
+      "name": "Health Regeneration Increase",
+      "expr": "(stats.Vitality * 0.02)",
+      "deps": [
+        "Vitality"
+      ]
+    },
+    "VerticalJumpSpeed": {
+      "name": "Vertical Jump Speed",
+      "expr": "5.5",
+      "deps": []
+    },
+    "FocusChargerRegen": {
+      "name": "Focus Charger Regen",
+      "expr": "20",
+      "deps": []
+    },
+    "CrushingResistanceValue": {
+      "name": "StatName_CrushingResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "GutsMultiplier": {
+      "name": "Guts Multiplier",
+      "expr": "1 - stats.GutsValue",
+      "deps": [
+        "GutsValue"
+      ]
+    },
+    "PercentMax": {
+      "name": "Percent Max",
+      "expr": "100",
+      "deps": []
+    },
+    "MaxFocus": {
+      "name": "Max Focus",
+      "expr": "1000",
+      "deps": []
+    },
+    "SlashingResistanceMultiplier": {
+      "name": "Slashing Resistance Multiplier",
+      "expr": "1 - stats.SlashingResistanceValue",
+      "deps": [
+        "SlashingResistanceValue"
+      ]
+    },
+    "CriticalDamageBonus": {
+      "name": "StatName_CriticalDamageBonus",
+      "expr": "0.25",
+      "deps": []
+    },
+    "CrushingResistanceMultiplier": {
+      "name": "Crushing Resistance Multiplier",
+      "expr": "1 - stats.CrushingResistanceValue",
+      "deps": [
+        "CrushingResistanceValue"
+      ]
+    },
+    "PiercingResistanceValue": {
+      "name": "StatName_PiercingResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "FocusRegenRate": {
+      "name": "Focus Regen Rate",
+      "expr": "(2 - stats.Spirit * 0.01)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "MindResistanceMultiplier": {
+      "name": "Mind Resistance Multiplier",
+      "expr": "1 - stats.MindResistanceValue",
+      "deps": [
+        "MindResistanceValue"
+      ]
+    },
+    "CriticalDamageMultiplier": {
+      "name": "StatName_CriticalDamageMultiplier",
+      "expr": "(1 + stats.CriticalDamageBonus)",
+      "deps": [
+        "CriticalDamageBonus"
+      ]
+    },
+    "DebuffDurationReduction": {
+      "name": "Debuff Duration Reduction",
+      "expr": "-0.1 + (0.015 * stats.Will) / (1 + 0.02 * stats.Will)",
+      "deps": [
+        "Will"
+      ]
+    },
+    "VoidResistanceMultiplier": {
+      "name": "Void Resistance Multiplier",
+      "expr": "1 - stats.VoidResistanceValue",
+      "deps": [
+        "VoidResistanceValue"
+      ]
+    },
+    "BaseHealingMultiplier": {
+      "name": "Healing Multiplier",
+      "expr": "(1 + stats.Conviction * 0.01)",
+      "deps": [
+        "Conviction"
+      ]
+    },
+    "CriticalHitChance": {
+      "name": "StatName_CriticalHitChance",
+      "expr": "(2 * (1 / (1 + Math.exp(-0.011 * stats.CriticalHitRating))) - 1)",
+      "deps": [
+        "CriticalHitRating"
+      ]
+    },
+    "GutsThreshold": {
+      "name": "Guts Threshold",
+      "expr": "(stats.BaseGutsThreshold + (stats.BonusGutsThreshold * (1 + stats.GutsThresholdIncrease)))",
+      "deps": [
+        "BaseGutsThreshold",
+        "BonusGutsThreshold",
+        "GutsThresholdIncrease"
+      ]
+    },
+    "BlockCooldown": {
+      "name": "Block Cooldown",
+      "expr": "(4 * (1 - (stats.BlockCooldownReduction)))",
+      "deps": [
+        "BlockCooldownReduction"
+      ]
+    },
+    "ShadowResistanceMultiplier": {
+      "name": "Shadow Resistance Multiplier",
+      "expr": "1 - stats.ShadowResistanceValue",
+      "deps": [
+        "ShadowResistanceValue"
+      ]
+    },
+    "CombinedHealthRegeneration": {
+      "name": "Health Regeneration",
+      "expr": "stats.HealthRegeneration",
+      "deps": [
+        "HealthRegeneration"
+      ]
+    },
+    "SlashingResistanceValue": {
+      "name": "StatName_SlashingResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "ChaosResistanceValue": {
+      "name": "StatName_ChaosResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "MaxDetermination": {
+      "name": "Max Determination",
+      "expr": "1000",
+      "deps": []
+    },
+    "DeterminationRegeneration": {
+      "name": "Determination Regeneration",
+      "expr": "(30 + stats.Spirit * 0.75)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "DebuffDurationMultiplier": {
+      "name": "Debuff Duration Multiplier",
+      "expr": "1 - stats.DebuffDurationReduction",
+      "deps": [
+        "DebuffDurationReduction"
+      ]
+    },
+    "GutsThresholdIncrease": {
+      "name": "Guts Threshold Increase",
+      "expr": "(stats.Endurance * 0.01)",
+      "deps": [
+        "Endurance"
+      ]
+    },
+    "JudgementGainMultiplier": {
+      "name": "Judgement Gain Multiplier",
+      "expr": "1",
+      "deps": []
+    },
+    "FaithRegeneration": {
+      "name": "Faith Regeneration",
+      "expr": "(stats.BaseFaithRegeneration * (1 + stats.FaithRegenerationIncrease))",
+      "deps": [
+        "BaseFaithRegeneration",
+        "FaithRegenerationIncrease"
+      ]
+    },
+    "BaseManaRegeneration": {
+      "name": "Base Mana Regeneration",
+      "expr": "stats.MaxMana / 150",
+      "deps": [
+        "MaxMana"
+      ]
+    },
+    "LightningResistanceValue": {
+      "name": "StatName_LightningResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "MaxMana": {
+      "name": "Max Mana",
+      "expr": "5000 + 150 * stats.Spirit",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "ManaRegeneration": {
+      "name": "Mana Regeneration",
+      "expr": "(stats.BaseManaRegeneration * (1 + stats.ManaRegenerationIncrease))",
+      "deps": [
+        "BaseManaRegeneration",
+        "ManaRegenerationIncrease"
+      ]
+    },
+    "CourageDegeneration": {
+      "name": "Courage Degeneration",
+      "expr": "-30",
+      "deps": []
+    },
+    "BaseMaxHP": {
+      "name": "Base Max Health",
+      "expr": "8000 + 80 * stats.Vitality",
+      "deps": [
+        "Vitality"
+      ]
+    },
+    "PhysicalArmorRating": {
+      "name": "StatName_PhysicalArmorRating",
+      "expr": "0",
+      "deps": []
+    },
+    "MindResistanceValue": {
+      "name": "StatName_MindResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "MaxTurnSpeed": {
+      "name": "Max Turn Speed",
+      "expr": "20.1",
+      "deps": []
+    },
+    "ShadowResistanceValue": {
+      "name": "StatName_ShadowResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "ParticipationMax": {
+      "name": "Participation Max Value",
+      "expr": "10000000",
+      "deps": []
+    },
+    "BaseWeaponDamageMultiplier": {
+      "name": "Weapon Damage Multiplier",
+      "expr": "(1 + stats.Strength * 0.01)",
+      "deps": [
+        "Strength"
+      ]
+    },
+    "BuffDurationMultiplier": {
+      "name": "Buff Duration",
+      "expr": "(1 + stats.Conviction * 0.006)",
+      "deps": [
+        "Conviction"
+      ]
+    },
+    "BaseVeilDegenTickRate": {
+      "name": "Determination Base Degen Rate",
+      "expr": "5",
+      "deps": []
+    },
+    "EarthResistanceMultiplier": {
+      "name": "Earth Resistance Multiplier",
+      "expr": "1 - stats.EarthResistanceValue",
+      "deps": [
+        "EarthResistanceValue"
+      ]
+    },
+    "ParryChance": {
+      "name": "Parry Chance",
+      "expr": "0",
+      "deps": []
+    },
+    "FireResistanceMultiplier": {
+      "name": "Fire Resistance Multiplier",
+      "expr": "1 - stats.FireResistanceValue",
+      "deps": [
+        "FireResistanceValue"
+      ]
+    },
+    "JudgementDegeneration": {
+      "name": "Judgement Degeneration",
+      "expr": "-2",
+      "deps": []
+    },
+    "CriticalHitRating": {
+      "name": "StatName_CriticalHitRating",
+      "expr": "(stats.Dexterity * 0.5)",
+      "deps": [
+        "Dexterity"
+      ]
+    },
+    "MaxFaith": {
+      "name": "Max Faith",
+      "expr": "1000",
+      "deps": []
+    },
+    "BlockCooldownReduction": {
+      "name": "Block Cooldown Reduction",
+      "expr": "(stats.Dexterity * 0.005)",
+      "deps": [
+        "Dexterity"
+      ]
+    },
+    "BaseGutsValue": {
+      "name": "Base Guts Value",
+      "expr": "(stats.Endurance * 0.006)",
+      "deps": [
+        "Endurance"
+      ]
+    },
+    "BasePanicMultiplier": {
+      "name": "Panic Multiplier",
+      "expr": "(1 + stats.Command * 0.01)",
+      "deps": [
+        "Command"
+      ]
+    },
+    "VoidResistanceValue": {
+      "name": "StatName_VoidResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "PanicResistanceValue": {
+      "name": "Panic Resistance",
+      "expr": "(stats.Will * 0.006)",
+      "deps": [
+        "Will"
+      ]
+    },
+    "EvasionChanceIncrease": {
+      "name": "Evasion Chance Increase",
+      "expr": "(stats.Dexterity * 0.01)",
+      "deps": [
+        "Dexterity"
+      ]
+    },
+    "ManaRegenerationIncrease": {
+      "name": "Mana Regeneration Increase",
+      "expr": "(stats.Spirit * 0.01)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "MaxHPIncrease": {
+      "name": "Bonus Health Multiplier",
+      "expr": "(stats.Vitality * 0.05)",
+      "deps": [
+        "Vitality"
+      ]
+    },
+    "MaxCourage": {
+      "name": "Max Courage",
+      "expr": "1000",
+      "deps": []
+    },
+    "DetectionRange": {
+      "name": "Detection Range",
+      "expr": "(15 + stats.Command * 0.5)",
+      "deps": [
+        "Command"
+      ]
+    },
+    "WeaponDamage": {
+      "name": "StatName_WeaponDamage",
+      "expr": "0",
+      "deps": []
+    },
+    "BaseSpellDamageMultiplier": {
+      "name": "Spell Damage Multiplier",
+      "expr": "(1 + stats.Attunement * 0.01)",
+      "deps": [
+        "Attunement"
+      ]
+    },
+    "MaxJudgement": {
+      "name": "Max Judgement",
+      "expr": "8",
+      "deps": []
+    },
+    "BaseEvasionChance": {
+      "name": "Base Evasion Chance",
+      "expr": "(stats.Dexterity * 0.002)",
+      "deps": [
+        "Dexterity"
+      ]
+    },
+    "ChaosResistanceMultiplier": {
+      "name": "Chaos Resistance Multiplier",
+      "expr": "1 - stats.ChaosResistanceValue",
+      "deps": [
+        "ChaosResistanceValue"
+      ]
+    },
+    "SpiritResistanceMultiplier": {
+      "name": "Spirit Resistance Multiplier",
+      "expr": "1 - stats.SpiritResistanceValue",
+      "deps": [
+        "SpiritResistanceValue"
+      ]
+    },
+    "ProspectingExcavationMax": {
+      "name": "Maximum Prospecting Excavation",
+      "expr": "100",
+      "deps": []
+    },
+    "SpiritResistanceValue": {
+      "name": "StatName_SpiritResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "HealthRegeneration": {
+      "name": "Health Regeneration",
+      "expr": "(stats.BaseHealthRegeneration * (1 + stats.HealthRegenerationIncrease))",
+      "deps": [
+        "BaseHealthRegeneration",
+        "HealthRegenerationIncrease"
+      ]
+    },
+    "BuffEffectMultiplier": {
+      "name": "Buff Effect",
+      "expr": "(1 + stats.Command * 0.003)",
+      "deps": [
+        "Command"
+      ]
+    },
+    "MaxShield": {
+      "name": "Maximum Shield",
+      "expr": "stats.MaxHP / 2",
+      "deps": [
+        "MaxHP"
+      ]
+    },
+    "BaseHealthRegeneration": {
+      "name": "Health Regeneration",
+      "expr": "stats.MaxHP / 150",
+      "deps": [
+        "MaxHP"
+      ]
+    },
+    "DetectionRegen": {
+      "name": "Detection Regen",
+      "expr": "100",
+      "deps": []
+    },
+    "GutsValue": {
+      "name": "Guts Value",
+      "expr": "(stats.BaseGutsValue + (stats.BonusGutsValue * (1 + stats.GutsValueIncrease)))",
+      "deps": [
+        "BaseGutsValue",
+        "BonusGutsValue",
+        "GutsValueIncrease"
+      ]
+    },
+    "PanicDecay": {
+      "name": "Panic Rating Decay",
+      "expr": "-25",
+      "deps": []
+    },
+    "MaxPanic": {
+      "name": "Maximum Panic Rating",
+      "expr": "1000",
+      "deps": []
+    },
+    "BlockValue": {
+      "name": "StatName_BlockValue",
+      "expr": "(stats.BaseBlockValue * (1 + stats.BlockValueIncrease))",
+      "deps": [
+        "BaseBlockValue",
+        "BlockValueIncrease"
+      ]
+    },
+    "BaseGutsThreshold": {
+      "name": "Base Guts Threshold",
+      "expr": "(0.12 + stats.Endurance * 0.0035)",
+      "deps": [
+        "Endurance"
+      ]
+    },
+    "ArcaneResistanceMultiplier": {
+      "name": "Arcane Resistance Multiplier",
+      "expr": "1 - stats.ArcaneResistanceValue",
+      "deps": [
+        "ArcaneResistanceValue"
+      ]
+    },
+    "MaxCombinedHealth": {
+      "name": "Maximum Combined Health",
+      "expr": "stats.MaxHP + stats.MaxShield",
+      "deps": [
+        "MaxHP",
+        "MaxShield"
+      ]
+    },
+    "PanicResistanceMultiplier": {
+      "name": "Panic Resistance Multiplier",
+      "expr": "1 - stats.PanicResistanceValue",
+      "deps": [
+        "PanicResistanceValue"
+      ]
+    },
+    "ArcaneResistanceValue": {
+      "name": "StatName_ArcaneResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "PiercingResistanceMultiplier": {
+      "name": "Piercing Resistance Multiplier",
+      "expr": "1 - stats.PiercingResistanceValue",
+      "deps": [
+        "PiercingResistanceValue"
+      ]
+    },
+    "PhysicalArmorMultiplier": {
+      "name": "Physical Armor Multiplier",
+      "expr": "1 - (0.003 * stats.PhysicalArmorRating) / (1 + 0.003 * stats.PhysicalArmorRating)",
+      "deps": [
+        "PhysicalArmorRating"
+      ]
+    },
+    "EarthResistanceValue": {
+      "name": "StatName_EarthResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "BlockValueIncrease": {
+      "name": "Block Value Increase",
+      "expr": "(stats.Endurance * 0.01)",
+      "deps": [
+        "Endurance"
+      ]
+    },
+    "CourageGainMultiplier": {
+      "name": "Courage Gain Multiplier",
+      "expr": "(1 + stats.Spirit * 0.005)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "FireResistanceValue": {
+      "name": "StatName_FireResistanceValue",
+      "expr": "0",
+      "deps": []
+    },
+    "FaithRegenerationIncrease": {
+      "name": "Faith Regeneration Increase",
+      "expr": "(stats.Spirit * 0.03)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "EvasionChance": {
+      "name": "Evasion Chance",
+      "expr": "(stats.BaseEvasionChance + (stats.BonusEvasionChance * (1 + stats.EvasionChanceIncrease)))",
+      "deps": [
+        "BaseEvasionChance",
+        "BonusEvasionChance",
+        "EvasionChanceIncrease"
+      ]
+    },
+    "CooldownSpeed": {
+      "name": "Cooldown Speed",
+      "expr": "1",
+      "deps": []
+    },
+    "ProspectingFragilityMax": {
+      "name": "Maximum Prospecting Fragility",
+      "expr": "100",
+      "deps": []
+    },
+    "GutsValueIncrease": {
+      "name": "Guts Increase",
+      "expr": "(stats.Endurance * 0.01)",
+      "deps": [
+        "Endurance"
+      ]
+    },
+    "FocusRegeneration": {
+      "name": "Focus Regeneration",
+      "expr": "(200 + stats.Spirit * 1.5)",
+      "deps": [
+        "Spirit"
+      ]
+    },
+    "MaxHP": {
+      "name": "Maximum Health",
+      "expr": "(stats.BaseMaxHP + (stats.BonusHealth * (1 + stats.MaxHPIncrease)))",
+      "deps": [
+        "BaseMaxHP",
+        "BonusHealth",
+        "MaxHPIncrease"
+      ]
+    },
+    "MaxHPLimit": {
+      "name": "Current Max Health",
+      "expr": "stats.MaxHP",
+      "deps": [
+        "MaxHP"
+      ]
+    },
+    "VeilResistance": {
+      "name": "Veil Resistance",
+      "expr": "(1 + stats.Command * 0.02)",
+      "deps": [
+        "Command"
+      ]
+    },
+    "MagicArmorRating": {
+      "name": "StatName_MagicArmorRating",
+      "expr": "0",
+      "deps": []
+    },
+    "LightningResistanceMultiplier": {
+      "name": "Lightning Resistance Multiplier",
+      "expr": "1 - stats.LightningResistanceValue",
+      "deps": [
+        "LightningResistanceValue"
+      ]
+    },
+    "ParryMultiplier": {
+      "name": "Parry Multiplier",
+      "expr": "0.5",
+      "deps": []
+    },
+    "BaseFaithRegeneration": {
+      "name": "Base Faith Regeneration",
+      "expr": "6",
+      "deps": []
+    }
+  },
+  "ui": {
+    "groups": [
+      {
+        "label": "Combat Pool",
+        "stats": [
+          "MaxHP",
+          "MaxShield",
+          "MaxCombinedHealth",
+          "HealthRegeneration",
+          "MaxMana",
+          "ManaRegeneration",
+          "FaithRegeneration",
+          "FocusRegeneration",
+          "DeterminationRegeneration",
+          "CourageDegeneration"
+        ]
+      },
+      {
+        "label": "Abilities",
+        "stats": [
+          "BuffDurationMultiplier",
+          "BuffEffectMultiplier",
+          "BaseHealingMultiplier"
+        ]
+      },
+      {
+        "label": "Offense",
+        "stats": [
+          "BaseWeaponDamageMultiplier",
+          "BaseSpellDamageMultiplier",
+          "BasePanicMultiplier"
+        ]
+      },
+      {
+        "label": "Defense",
+        "stats": [
+          "DebuffDurationMultiplier",
+          "GutsThreshold",
+          "GutsValue",
+          "EvasionChance",
+          "BlockCooldown",
+          "BlockValue",
+          "PanicResistanceValue",
+          "PanicDecay"
+        ]
+      },
+      {
+        "label": "Utility",
+        "stats": [
+          "DetectionRange",
+          "VeilResistance"
+        ]
+      }
+    ],
+    "display": {
+      "MaxHP": {
+        "label": "Max HP",
+        "format": "integer",
+        "driver": "Vitality"
+      },
+      "MaxShield": {
+        "label": "Max Shield",
+        "format": "integer",
+        "driver": "Vitality"
+      },
+      "MaxCombinedHealth": {
+        "label": "Max HP+Shield",
+        "format": "integer",
+        "driver": "Vitality"
+      },
+      "HealthRegeneration": {
+        "label": "HP Regen/s",
+        "format": "float2",
+        "driver": "Vitality"
+      },
+      "MaxMana": {
+        "label": "Max Mana",
+        "format": "integer",
+        "driver": "Spirit"
+      },
+      "ManaRegeneration": {
+        "label": "Mana Regen/s",
+        "format": "float2",
+        "driver": "Spirit"
+      },
+      "FaithRegeneration": {
+        "label": "Faith Regen",
+        "format": "float2",
+        "driver": "Spirit"
+      },
+      "FocusRegeneration": {
+        "label": "Focus Regen",
+        "format": "float3",
+        "driver": "Spirit"
+      },
+      "DeterminationRegeneration": {
+        "label": "Determ. Regen",
+        "format": "float2",
+        "driver": "Spirit"
+      },
+      "CourageDegeneration": {
+        "label": "Courage Degen",
+        "format": "float2",
+        "driver": "Spirit"
+      },
+      "BuffDurationMultiplier": {
+        "label": "Buff Duration x",
+        "format": "mult",
+        "driver": "Conviction"
+      },
+      "BuffEffectMultiplier": {
+        "label": "Buff Effect x",
+        "format": "mult",
+        "driver": "Command"
+      },
+      "BaseHealingMultiplier": {
+        "label": "Healing x",
+        "format": "mult",
+        "driver": "Conviction"
+      },
+      "BaseWeaponDamageMultiplier": {
+        "label": "Melee Dmg x",
+        "format": "mult",
+        "driver": "Strength"
+      },
+      "BaseSpellDamageMultiplier": {
+        "label": "Spell Dmg x",
+        "format": "mult",
+        "driver": "Attunement"
+      },
+      "BasePanicMultiplier": {
+        "label": "Panic x",
+        "format": "mult",
+        "driver": "Command"
+      },
+      "DebuffDurationMultiplier": {
+        "label": "Debuff Dur x",
+        "format": "mult",
+        "driver": "Will"
+      },
+      "GutsThreshold": {
+        "label": "Guts Threshold",
+        "format": "pct",
+        "driver": "Endurance"
+      },
+      "GutsValue": {
+        "label": "Guts DR",
+        "format": "pct",
+        "driver": "Endurance"
+      },
+      "EvasionChance": {
+        "label": "Evasion",
+        "format": "pct",
+        "driver": "Dexterity"
+      },
+      "BlockCooldown": {
+        "label": "Block CD",
+        "format": "float2",
+        "driver": "Dexterity"
+      },
+      "BlockValue": {
+        "label": "Block Value x",
+        "format": "mult",
+        "driver": "Endurance"
+      },
+      "PanicResistanceValue": {
+        "label": "Panic Resist",
+        "format": "pct",
+        "driver": "Will"
+      },
+      "PanicDecay": {
+        "label": "Panic Decay",
+        "format": "float0",
+        "driver": "Will"
+      },
+      "DetectionRange": {
+        "label": "Detection Range",
+        "format": "units",
+        "driver": "Command"
+      },
+      "VeilResistance": {
+        "label": "Veil Resist x",
+        "format": "mult",
+        "driver": "Command"
+      }
+    }
+  }
+}
