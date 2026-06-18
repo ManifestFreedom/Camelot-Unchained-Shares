@@ -12,8 +12,15 @@ GitHub: https://manifestfreedom.github.io/Camelot-Unchained-Shares/
 
 Local File: https://github.com/ManifestFreedom/Camelot-Unchained-Shares/blob/main/cu_stat_dashboard%20(7).html
 
-This is an excel file where you can view information from the CU API: 
+
+
+Depreciated Links:
+
+Prior to 6/19/2026:
+
+"This is an excel file where you can view information from the CU API: 
 
 https://github.com/ManifestFreedom/Camelot-Unchained-Shares/blob/main/API_Stats_Operations_Breakdown_Calc_V2%20(2).xlsx
 
 <img width="1893" height="724" alt="image" src="https://github.com/user-attachments/assets/ec6b15b4-4b15-4db5-96d0-9d14df55c3d5" />
+"
