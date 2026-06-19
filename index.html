@@ -160,6 +160,18 @@ const TOTAL_PTS = 30;
 // With base=5, this means a maximum of 35 allocated points per stat.
 const MAX_STAT_PRE_BONUS = 40;
 
+// ── Gear stat metadata ────────────────────────────────────────────────────────
+// Defines display labels, valid range, and visual color for each gear bonus.
+// `pct: true`  — internal value is 0–0.3, displayed as a percentage (0%–30%).
+// `options`    — discrete valid values rendered as toggle buttons, not a slider.
+const GEAR_META = {
+  BonusHealth:        { min: 0, max: 3000, pct: false, label: "Bonus Health",         color: "#ff4060" },
+  BonusGutsValue:     { min: 0, max: 0.3,  pct: true,  label: "Guts Value Bonus",     color: "#8ac840" },
+  BonusGutsThreshold: { min: 0, max: 0.3,  pct: true,  label: "Guts Threshold Bonus", color: "#8ac840" },
+  BonusEvasionChance: { min: 0, max: 0.3,  pct: true,  label: "Evasion Chance Bonus", color: "#40e0d0" },
+  BaseBlockValue:     { options: [80, 100], pct: false, label: "Base Block Value",     color: "#ff9940" },
+};
+
 // ── Formula Engine ────────────────────────────────────────────────────────────
 // Evaluates the dependency graph from stat_formulas.json.
 // Topological sort via DFS ensures each formula is evaluated after all its deps.
@@ -457,13 +469,36 @@ function buildPlannerHTML() {
       </div>`;
   });
 
-  let gearInputs = "";
+  // Gear stat rows: sliders for continuous stats, toggle buttons for discrete options.
+  let gearRows = "";
   engine.gear.forEach(s => {
-    gearInputs += `<div style="display:flex;align-items:center;gap:4px">
-      <span style="font-size:10px;color:${SC[s] || "#e8d9a0"};width:90px;flex-shrink:0">${s}</span>
-      <input type="number" class="numsmall" min="0" max="200" value="${S.gear[s] || 0}"
-        oninput="onGear('${s}', +this.value)"/>
-    </div>`;
+    const meta = GEAR_META[s] || { min: 0, max: 200, pct: false, label: s, color: "#e8d9a0" };
+    const val  = S.gear[s] || 0;
+    const { color, label } = meta;
+
+    if (meta.options) {
+      // Discrete choice (BaseBlockValue: 80 or 100) — toggle buttons
+      const btns = meta.options.map(opt => {
+        const active = Math.round(val) === opt;
+        return `<button style="font-size:11px;padding:2px 12px;border-radius:3px;cursor:pointer;font-family:Georgia,serif;background:${active ? color + "33" : "transparent"};color:${active ? color : "#7a6f5a"};border:1px solid ${active ? color + "88" : "rgba(255,255,255,.12)"}" onclick="S.gear['${s}']=${opt};renderTab()">${opt}</button>`;
+      }).join(" ");
+      gearRows += `<div class="stat-row">
+        <span class="stat-name" style="color:${color};font-size:11px;width:140px">${label}</span>
+        <div class="stat-range" style="display:flex;gap:8px;align-items:center">${btns}</div>
+        <span class="stat-val" id="gv-${s}" style="color:${color}">${val > 0 ? Math.round(val) : "\u2014"}</span>
+      </div>`;
+    } else {
+      // Continuous slider. pct stats: slider 0–300 (step 1 = 0.1%), stored internally as 0–0.3.
+      const sliderMax  = meta.pct ? 300 : meta.max;
+      const sliderVal  = meta.pct ? Math.round(val * 1000) : val;
+      const displayVal = meta.pct ? (val * 100).toFixed(1) + "%" : Math.round(val).toLocaleString();
+      gearRows += `<div class="stat-row">
+        <span class="stat-name" style="color:${color};font-size:11px;width:140px">${label}</span>
+        <input type="range" class="stat-range" min="0" max="${sliderMax}" step="1" value="${sliderVal}"
+          style="accent-color:${color}" oninput="onGearSlider('${s}',+this.value)"/>
+        <span class="stat-val" id="gv-${s}" style="color:${color}">${displayVal}</span>
+      </div>`;
+    }
   });
 
   const ctx     = getPrimaryStats(S.raceId, S.archetypeId, S.alloc, S.gear);
@@ -487,7 +522,7 @@ function buildPlannerHTML() {
   }
 
   const groups  = engine.ui.groups;
-  const mid     = Math.ceil(groups.length / 2);
+  const mid     = Math.floor(groups.length / 2);
   const leftCol  = groups.slice(0, mid).map(makeGroup).join("");
   const rightCol = groups.slice(mid).map(makeGroup).join("");
 
@@ -534,7 +569,7 @@ function buildPlannerHTML() {
       </div>
       <div class="card">
         <div class="slabel">Gear Stat Bonuses (total across all slots)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${gearInputs}</div>
+        <div>${gearRows}</div>
         <button class="btn" onclick="S.gear=Object.fromEntries(engine.gear.map(s=>[s,0]));renderTab()">Clear gear</button>
       </div>
     </div>
@@ -563,7 +598,23 @@ function onSlider(s, v) {
 }
 
 function onGear(s, v) {
-  S.gear[s] = Math.max(0, Math.min(200, v || 0));
+  const meta = GEAR_META[s];
+  const max  = meta ? (meta.options ? Math.max(...meta.options) : meta.max) : 200;
+  S.gear[s]  = Math.max(0, Math.min(max, v || 0));
+  updateBuildDisplay();
+}
+
+// Converts a slider position to an internal gear value, patches the display span,
+// and triggers a derived-stat recalculation. Called by all continuous gear sliders.
+// pct stats use slider range 0–300; each unit = 0.001 internal (= 0.1% displayed).
+function onGearSlider(s, sliderVal) {
+  const meta = GEAR_META[s];
+  const v    = meta.pct ? sliderVal / 1000 : sliderVal;
+  S.gear[s]  = Math.max(meta.min, Math.min(meta.max, v));
+  const el   = document.getElementById("gv-" + s);
+  if (el) el.textContent = meta.pct
+    ? (S.gear[s] * 100).toFixed(1) + "%"
+    : Math.round(S.gear[s]).toLocaleString();
   updateBuildDisplay();
 }
 
