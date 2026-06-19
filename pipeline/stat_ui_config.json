@@ -1,0 +1,62 @@
+{
+  "groups": [
+    {
+      "label": "Combat Pool",
+      "stats": [
+        "MaxHP", "MaxShield", "MaxCombinedHealth",
+        "HealthRegeneration", "MaxMana", "ManaRegeneration",
+        "FaithRegeneration", "FocusRegeneration",
+        "DeterminationRegeneration", "CourageGainMultiplier"
+      ]
+    },
+    {
+      "label": "Abilities",
+      "stats": ["BuffDurationMultiplier", "BuffEffectMultiplier", "BaseHealingMultiplier"]
+    },
+    {
+      "label": "Offense",
+      "stats": ["BaseWeaponDamageMultiplier", "BaseSpellDamageMultiplier", "BasePanicMultiplier", "CriticalHitChance"]
+    },
+    {
+      "label": "Defense",
+      "stats": [
+        "DebuffDurationMultiplier", "GutsThreshold", "GutsValue",
+        "EvasionChance", "BlockCooldown", "BlockValue",
+        "PanicResistanceValue", "PanicDecay"
+      ]
+    },
+    {
+      "label": "Utility",
+      "stats": ["DetectionRange", "VeilResistance"]
+    }
+  ],
+  "display": {
+    "MaxHP":                     { "label": "Max HP",           "format": "integer", "driver": "Vitality"   },
+    "MaxShield":                 { "label": "Max Shield",       "format": "integer", "driver": "Vitality"   },
+    "MaxCombinedHealth":         { "label": "Max HP+Shield",    "format": "integer", "driver": "Vitality"   },
+    "HealthRegeneration":        { "label": "HP Regen/s",       "format": "float2",  "driver": "Vitality"   },
+    "MaxMana":                   { "label": "Max Mana",         "format": "integer", "driver": "Spirit"     },
+    "ManaRegeneration":          { "label": "Mana Regen/s",     "format": "float2",  "driver": "Spirit"     },
+    "FaithRegeneration":         { "label": "Faith Regen",      "format": "float2",  "driver": "Spirit"     },
+    "FocusRegeneration":         { "label": "Focus Regen",      "format": "float3",  "driver": "Spirit"     },
+    "DeterminationRegeneration": { "label": "Determ. Regen",    "format": "float2",  "driver": "Spirit"     },
+    "CourageGainMultiplier":     { "label": "Courage Gain x",   "format": "mult",    "driver": "Spirit"     },
+    "BuffDurationMultiplier":    { "label": "Buff Duration x",  "format": "mult",    "driver": "Conviction" },
+    "BuffEffectMultiplier":      { "label": "Buff Effect x",    "format": "mult",    "driver": "Command"    },
+    "BaseHealingMultiplier":     { "label": "Healing x",        "format": "mult",    "driver": "Conviction" },
+    "BaseWeaponDamageMultiplier":{ "label": "Melee Dmg x",      "format": "mult",    "driver": "Strength"   },
+    "BaseSpellDamageMultiplier": { "label": "Spell Dmg x",      "format": "mult",    "driver": "Attunement" },
+    "BasePanicMultiplier":       { "label": "Panic x",          "format": "mult",    "driver": "Command"    },
+    "CriticalHitChance":         { "label": "Base Crit Chance", "format": "pct",     "driver": "Dexterity"  },
+    "DebuffDurationMultiplier":  { "label": "Debuff Dur x",     "format": "mult",    "driver": "Will"       },
+    "GutsThreshold":             { "label": "Guts Threshold",   "format": "pct",     "driver": "Endurance"  },
+    "GutsValue":                 { "label": "Guts DR",          "format": "pct",     "driver": "Endurance"  },
+    "EvasionChance":             { "label": "Evasion",          "format": "pct",     "driver": "Dexterity"  },
+    "BlockCooldown":             { "label": "Block CD",         "format": "float2",  "driver": "Dexterity"  },
+    "BlockValue":                { "label": "Block Value x",    "format": "mult",    "driver": "Endurance"  },
+    "PanicResistanceValue":      { "label": "Panic Resist",     "format": "pct",     "driver": "Will"       },
+    "PanicDecay":                { "label": "Panic Decay",      "format": "float0",  "driver": "Will"       },
+    "DetectionRange":            { "label": "Detection Range",  "format": "units",   "driver": "Command"    },
+    "VeilResistance":            { "label": "Veil Resist x",    "format": "mult",    "driver": "Command"    }
+  }
+}

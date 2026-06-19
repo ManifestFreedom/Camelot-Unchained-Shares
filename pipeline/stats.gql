@@ -1,0 +1,1 @@
+{"query":"{game{baseStatValues{stat amount}raceStatMods{race statBonuses{stat amount}}stats{id name description statType showAtCharacterCreation operation itemRequirementStat}\n}\n}\n","variables":null,"operationName":null}
