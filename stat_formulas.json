@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-16",
+  "version": "2026-06-19",
   "primary": [
     "Attunement",
     "Command",
@@ -94,7 +94,7 @@
       ]
     },
     "BaseSpellDamageMultiplier": {
-      "name": "Spell Damage Multiplier",
+      "name": "Spell Multiplier",
       "expr": "(1 + stats.Attunement * 0.01)",
       "deps": [
         "Attunement"
@@ -106,7 +106,7 @@
       "deps": []
     },
     "BaseWeaponDamageMultiplier": {
-      "name": "Weapon Damage Multiplier",
+      "name": "Weaponskill Multiplier",
       "expr": "(1 + stats.Strength * 0.01)",
       "deps": [
         "Strength"
@@ -365,7 +365,7 @@
       ]
     },
     "GutsValue": {
-      "name": "Guts Value",
+      "name": "Guts Damage Reduction",
       "expr": "(stats.BaseGutsValue + (stats.BonusGutsValue * (1 + stats.GutsValueIncrease)))",
       "deps": [
         "BaseGutsValue",
@@ -418,7 +418,7 @@
       "deps": []
     },
     "MagicArmorMultiplier": {
-      "name": "Magic Armor Multiplier",
+      "name": "Magic Damage Reduction",
       "expr": "1 - (0.003 * stats.MagicArmorRating) / (1 + 0.003 * stats.MagicArmorRating)",
       "deps": [
         "MagicArmorRating"
@@ -482,7 +482,7 @@
       ]
     },
     "MaxHPIncrease": {
-      "name": "Bonus Health Multiplier",
+      "name": "Bonus Health Increase",
       "expr": "(stats.Vitality * 0.05)",
       "deps": [
         "Vitality"
@@ -586,7 +586,7 @@
       "deps": []
     },
     "PhysicalArmorMultiplier": {
-      "name": "Physical Armor Multiplier",
+      "name": "Physical Damage Reduction",
       "expr": "1 - (0.003 * stats.PhysicalArmorRating) / (1 + 0.003 * stats.PhysicalArmorRating)",
       "deps": [
         "PhysicalArmorRating"
@@ -698,8 +698,9 @@
           "ManaRegeneration",
           "FaithRegeneration",
           "FocusRegeneration",
+          "FocusRegenRate",
           "DeterminationRegeneration",
-          "CourageDegeneration"
+          "CourageGainMultiplier"
         ]
       },
       {
@@ -715,7 +716,8 @@
         "stats": [
           "BaseWeaponDamageMultiplier",
           "BaseSpellDamageMultiplier",
-          "BasePanicMultiplier"
+          "BasePanicMultiplier",
+          "CriticalHitChance"
         ]
       },
       {
@@ -727,8 +729,7 @@
           "EvasionChance",
           "BlockCooldown",
           "BlockValue",
-          "PanicResistanceValue",
-          "PanicDecay"
+          "PanicResistanceValue"
         ]
       },
       {
@@ -780,14 +781,19 @@
         "format": "float3",
         "driver": "Spirit"
       },
+      "FocusRegenRate": {
+        "label": "Focus Tick secs",
+        "format": "float3",
+        "driver": "Spirit"
+      },
       "DeterminationRegeneration": {
         "label": "Determ. Regen",
         "format": "float2",
         "driver": "Spirit"
       },
-      "CourageDegeneration": {
-        "label": "Courage Degen",
-        "format": "float2",
+      "CourageGainMultiplier": {
+        "label": "Courage Gain x",
+        "format": "mult",
         "driver": "Spirit"
       },
       "BuffDurationMultiplier": {
@@ -806,7 +812,7 @@
         "driver": "Conviction"
       },
       "BaseWeaponDamageMultiplier": {
-        "label": "Melee Dmg x",
+        "label": "Weapon Dmg x",
         "format": "mult",
         "driver": "Strength"
       },
@@ -819,6 +825,11 @@
         "label": "Panic x",
         "format": "mult",
         "driver": "Command"
+      },
+      "CriticalHitChance": {
+        "label": "Base Crit Chance",
+        "format": "pct",
+        "driver": "Dexterity"
       },
       "DebuffDurationMultiplier": {
         "label": "Debuff Dur x",
@@ -846,18 +857,13 @@
         "driver": "Dexterity"
       },
       "BlockValue": {
-        "label": "Block Value x",
-        "format": "mult",
+        "label": "Block Value",
+        "format": "integer",
         "driver": "Endurance"
       },
       "PanicResistanceValue": {
         "label": "Panic Resist",
         "format": "pct",
-        "driver": "Will"
-      },
-      "PanicDecay": {
-        "label": "Panic Decay",
-        "format": "float0",
         "driver": "Will"
       },
       "DetectionRange": {
