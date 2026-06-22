@@ -169,7 +169,7 @@ const GEAR_META = {
   BonusGutsValue:     { min: 0, max: 0.3,  pct: true,  label: "Guts Value Bonus",     color: "#8ac840" },
   BonusGutsThreshold: { min: 0, max: 0.3,  pct: true,  label: "Guts Threshold Bonus", color: "#8ac840" },
   BonusEvasionChance: { min: 0, max: 0.3,  pct: true,  label: "Evasion Chance Bonus", color: "#40e0d0" },
-  BaseBlockValue:     { options: [80, 100], pct: false, label: "Base Block Value",     color: "#ff9940" },
+  BaseBlockValue:     { options: [105, 130], pct: false, label: "Base Block Value",    color: "#ff9940" },
 };
 
 // ── Formula Engine ────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ class FormulaEngine {
     this.version  = json.version;
     this.primary  = json.primary;    // ["Vitality", ...]
     this.gear     = json.gear;       // ["BonusHealth", ...]
-    this.baseVal  = json.baseValue;  // 10
+    this.baseVal  = json.baseValue;  // 5
     this.formulas = json.formulas;   // { id: { expr, deps, name } }
     this.ui       = json.ui;         // { groups, display }
     this.evalOrder = this._topoSort();
