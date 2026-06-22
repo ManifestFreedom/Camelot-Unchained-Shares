@@ -170,6 +170,10 @@ const GEAR_META = {
   BonusGutsThreshold: { min: 0, max: 0.3,  pct: true,  label: "Guts Threshold Bonus", color: "#8ac840" },
   BonusEvasionChance: { min: 0, max: 0.3,  pct: true,  label: "Evasion Chance Bonus", color: "#40e0d0" },
   BaseBlockValue:     { options: [105, 130], pct: false, label: "Base Block Value",    color: "#ff9940" },
+  // Primary stat gear bonuses — added on top of base + alloc + racial + class bonuses.
+  // `isPrimary: true` means the value is injected into the primary stat sum, not formula gear inputs.
+  Strength:           { options: [0, 4],  isPrimary: true, pct: false, label: "Strength Bonus", color: "#ff5040" },
+  Vitality:           { options: [0, 20], isPrimary: true, pct: false, label: "Vitality Bonus",  color: "#ff4060" },
 };
 
 // ── Formula Engine ────────────────────────────────────────────────────────────
@@ -298,7 +302,7 @@ let S = null;           // initialised in boot()
 
 function initState() {
   const zeroStats = () => Object.fromEntries(engine.primary.map(s => [s, 0]));
-  const zeroGear  = () => Object.fromEntries(engine.gear.map(s => [s, 0]));
+  const zeroGear  = () => Object.fromEntries(gearKeys().map(s => [s, 0]));
   S = {
     tab: 0,
     raceId:      "CaitSith",
@@ -325,13 +329,16 @@ function initState() {
 function getPrimaryStats(raceId, archetypeId, alloc, gear) {
   const race = RACES.find(r => r.id === raceId);
   const arch = ARCHETYPES.find(a => a.archetype === archetypeId);
+  const classBonuses = getClassBonuses(arch, race.faction);
   const primary = Object.fromEntries(
     engine.primary.map(s => [
       s,
       engine.baseVal
         + (alloc[s] || 0)
         + (race.b[s] || 0)
-        + (arch ? (arch.b[s] || 0) : 0)
+        + (classBonuses[s] || 0)
+        // isPrimary gear entries add directly to the primary stat value
+        + (GEAR_META[s]?.isPrimary ? ((gear || {})[s] || 0) : 0)
     ])
   );
   const gearStats = Object.fromEntries(engine.gear.map(s => [s, (gear || {})[s] || 0]));
@@ -340,6 +347,24 @@ function getPrimaryStats(raceId, archetypeId, alloc, gear) {
 
 function hexRgb(h) {
   return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`;
+}
+
+// All stat keys tracked in S.gear: formula gear inputs + isPrimary entries from GEAR_META.
+// Must be called after engine is loaded.
+function gearKeys() {
+  return [
+    ...engine.gear,
+    ...Object.keys(GEAR_META).filter(k => GEAR_META[k].isPrimary),
+  ];
+}
+
+// Resolve stat bonuses for an archetype in a given faction.
+// If the class entry (arch.classes[faction]) is an object with its own `b`,
+// it takes precedence over the archetype-level `b` entirely.
+function getClassBonuses(arch, faction) {
+  if (!arch) return {};
+  const entry = arch.classes[faction];
+  return (entry && typeof entry === 'object' && entry.b) ? entry.b : arch.b;
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -442,21 +467,23 @@ function buildPlannerHTML() {
     : `<span style="font-size:11px;color:#7a6f5a">No racial bonuses</span>`;
 
   const arch    = ARCHETYPES.find(a => a.archetype === S.archetypeId);
+  const classBonuses = getClassBonuses(arch, race.faction);
   // Class bonus counts against the ceiling (floor raised, ceiling fixed):
   //   alloc ≤ MAX_STAT_PRE_BONUS - base - class_bonus
   // Racial is symmetric (raises both), so it does not reduce allocatable range.
-  const maxAllocFor = s => MAX_STAT_PRE_BONUS - engine.baseVal - (arch ? (arch.b[s] || 0) : 0);
+  const maxAllocFor = s => MAX_STAT_PRE_BONUS - engine.baseVal - (classBonuses[s] || 0);
   const ptUsed   = Object.values(S.alloc).reduce((a,b) => a+b, 0);
   const ptLeft   = TOTAL_PTS - ptUsed;
 
   let statRows = "";
   engine.primary.forEach(s => {
-    const racial  = race.b[s] || 0;
-    const cls     = arch ? (arch.b[s] || 0) : 0;
-    const cur     = S.alloc[s] || 0;
-    const total   = engine.baseVal + cur + racial + cls;
-    const maxRange = Math.min(maxAllocFor(s), cur + ptLeft);
-    const dimParts = `${engine.baseVal}+${cur}${racial>0?"+"+racial+"r":""}${cls>0?"+"+cls+"c":""}`;
+    const racial    = race.b[s] || 0;
+    const cls       = classBonuses[s] || 0;
+    const gearBonus = GEAR_META[s]?.isPrimary ? (S.gear[s] || 0) : 0;
+    const cur       = S.alloc[s] || 0;
+    const total     = engine.baseVal + cur + racial + cls + gearBonus;
+    const maxRange  = Math.min(maxAllocFor(s), cur + ptLeft);
+    const dimParts  = `${engine.baseVal}+${cur}${racial>0?"+"+racial+"r":""}${cls>0?"+"+cls+"c":""}${gearBonus>0?"+"+gearBonus+"g":""}`;
     statRows += `
       <div class="stat-row">
         <span class="stat-name" style="color:${SC[s]}">${s}</span>
@@ -471,7 +498,7 @@ function buildPlannerHTML() {
 
   // Gear stat rows: sliders for continuous stats, toggle buttons for discrete options.
   let gearRows = "";
-  engine.gear.forEach(s => {
+  gearKeys().forEach(s => {
     const meta = GEAR_META[s] || { min: 0, max: 200, pct: false, label: s, color: "#e8d9a0" };
     const val  = S.gear[s] || 0;
     const { color, label } = meta;
@@ -544,13 +571,14 @@ function buildPlannerHTML() {
             <div class="slabel">Class</div>
             <select class="field" id="archetype-sel" onchange="S.archetypeId=this.value;renderTab()">
               ${ARCHETYPES.map(a => {
-                const cls = a.classes[race.faction];
-                const label = cls ? `${cls} (${a.archetype})` : a.archetype;
+                const entry = a.classes[race.faction];
+                const clsName = (entry && typeof entry === 'object') ? entry.name : entry;
+                const label = clsName ? `${clsName} (${a.archetype})` : a.archetype;
                 return `<option value="${a.archetype}"${a.archetype===S.archetypeId?' selected':''}>${label}</option>`;
               }).join('')}
             </select>
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-              ${arch ? Object.entries(arch.b).filter(([,v])=>v>0).map(([k,v])=>`<span class="badge" style="color:${SC[k]};background:${SC[k]}22">+${v} ${k.slice(0,4)}</span>`).join('') || '<span style="font-size:11px;color:#7a6f5a">No class bonuses</span>' : ''}
+              ${arch ? Object.entries(classBonuses).filter(([,v])=>v>0).map(([k,v])=>`<span class="badge" style="color:${SC[k]};background:${SC[k]}22">+${v} ${k.slice(0,4)}</span>`).join('') || '<span style="font-size:11px;color:#7a6f5a">No class bonuses</span>' : ''}
             </div>
           </div>
         </div>
@@ -570,7 +598,7 @@ function buildPlannerHTML() {
       <div class="card">
         <div class="slabel">Gear Stat Bonuses (total across all slots)</div>
         <div>${gearRows}</div>
-        <button class="btn" onclick="S.gear=Object.fromEntries(engine.gear.map(s=>[s,0]));renderTab()">Clear gear</button>
+        <button class="btn" onclick="S.gear=Object.fromEntries(gearKeys().map(s=>[s,0]));renderTab()">Clear gear</button>
       </div>
     </div>
     <div>
@@ -592,7 +620,8 @@ function onSlider(s, v) {
     return;
   }
   const arch = ARCHETYPES.find(a => a.archetype === S.archetypeId);
-  const cap   = MAX_STAT_PRE_BONUS - engine.baseVal - (arch ? (arch.b[s] || 0) : 0);
+  const race = RACES.find(r => r.id === S.raceId);
+  const cap   = MAX_STAT_PRE_BONUS - engine.baseVal - (getClassBonuses(arch, race.faction)[s] || 0);
   S.alloc[s]  = Math.max(0, Math.min(cap, v));
   updateBuildDisplay();
 }
@@ -635,15 +664,17 @@ function updateBuildDisplay() {
   if (elBar)  { elBar.style.width = ptPct + "%"; elBar.style.background = ptLeft < 0 ? "#e24b4a" : fc; }
 
   const arch = ARCHETYPES.find(a => a.archetype === S.archetypeId);
+  const classBonuses = getClassBonuses(arch, race.faction);
   engine.primary.forEach(s => {
-    const racial  = race.b[s] || 0;
-    const cls     = arch ? (arch.b[s] || 0) : 0;
-    const cur     = S.alloc[s] || 0;
-    const total   = engine.baseVal + cur + racial + cls;
+    const racial    = race.b[s] || 0;
+    const cls       = classBonuses[s] || 0;
+    const gearBonus = GEAR_META[s]?.isPrimary ? (S.gear[s] || 0) : 0;
+    const cur       = S.alloc[s] || 0;
+    const total     = engine.baseVal + cur + racial + cls + gearBonus;
     // Class bonus pre-fills allocation room; racial does not (it raises ceiling equally).
-    const cap     = MAX_STAT_PRE_BONUS - engine.baseVal - cls;
-    const newMax  = Math.min(cap, cur + ptLeft);
-    const dimParts = `${engine.baseVal}+${cur}${racial > 0 ? "+" + racial + "r" : ""}${cls > 0 ? "+" + cls + "c" : ""}`;
+    const cap       = MAX_STAT_PRE_BONUS - engine.baseVal - cls;
+    const newMax    = Math.min(cap, cur + ptLeft);
+    const dimParts  = `${engine.baseVal}+${cur}${racial > 0 ? "+" + racial + "r" : ""}${cls > 0 ? "+" + cls + "c" : ""}${gearBonus > 0 ? "+" + gearBonus + "g" : ""}`;
     const valEl   = document.getElementById("sval-" + s);
     if (valEl) valEl.innerHTML =
       `<span class="stat-bold" style="color:${SC[s]}">${total}</span>` +
