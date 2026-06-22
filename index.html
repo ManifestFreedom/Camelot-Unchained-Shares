@@ -138,7 +138,12 @@ const ARCHETYPES = [
   },
   {
     archetype: "Bard",
-    classes: { Arthurian: "Minstrel", Viking: "Skald", TDD: "Dark Fool" },
+    classes: { Arthurian: "Minstrel",
+      Viking: {
+        name: "Skald",
+        b: {Attunement:0,Command:20,Conviction:5,Dexterity:0,Endurance:0,Spirit:5,Strength:10,Vitality:10,Will:0}
+      },
+      TDD: "Dark Fool" },
     b: {Attunement:5,Command:20,Conviction:0,Dexterity:10,Endurance:0,Spirit:5,Strength:10,Vitality:0,Will:0}
   },
   {
