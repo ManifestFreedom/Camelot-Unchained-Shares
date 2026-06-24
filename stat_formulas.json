@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19",
+  "version": "2026-06-24",
   "primary": [
     "Attunement",
     "Command",
@@ -20,6 +20,15 @@
   ],
   "baseValue": 5,
   "formulas": {
+    "EffectiveHP": {
+      "name": "Effective HP (Guts-adjusted)",
+      "expr": "stats.MaxHP * (1 + stats.GutsThreshold * stats.GutsValue / (1 - stats.GutsValue))",
+      "deps": [
+        "GutsThreshold",
+        "GutsValue",
+        "MaxHP"
+      ]
+    },
     "ArcaneResistanceMultiplier": {
       "name": "Arcane Resistance Multiplier",
       "expr": "1 - stats.ArcaneResistanceValue",
@@ -691,6 +700,7 @@
         "label": "Combat Pool",
         "stats": [
           "MaxHP",
+          "EffectiveHP",
           "MaxShield",
           "MaxCombinedHealth",
           "HealthRegeneration",
@@ -745,6 +755,11 @@
         "label": "Max HP",
         "format": "integer",
         "driver": "Vitality"
+      },
+      "EffectiveHP": {
+        "label": "Effective HP",
+        "format": "integer",
+        "driver": "Endurance"
       },
       "MaxShield": {
         "label": "Max Shield",

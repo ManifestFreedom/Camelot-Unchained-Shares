@@ -67,6 +67,22 @@ def extract_deps:
   | from_entries
 ) as $formulas |
 
+# ── Synthetic (editorial) formulas ──────────────────────────────────────────
+# Formulas not present in the API (e.g. derived combat readouts). Authored in
+# stat_ui_config.json; evaluated by the same engine. API formulas stay
+# authoritative on any id collision ($synthetic listed first).
+(
+    ($ui.synthetic // {}) | to_entries | map({
+    key: .key,
+    value: {
+        name: .value.name,
+        expr: (.value.expr | clean_expr),
+        deps: (.value.expr | clean_expr | extract_deps)
+    }
+    }) | from_entries
+) as $synthetic |
+($synthetic + $formulas) as $formulas |
+
 # ── Validation ─────────────────────────────────────────────────────────────────
 # Every dep referenced in a formula must be resolvable: either a primary stat,
 # a gear input, or another formula entry.  Unknown refs are surfaced as errors.
@@ -98,5 +114,5 @@ else . end |
   gear:     $gear,
   baseValue: 5,
   formulas: $formulas,
-  ui:       $ui
+  ui: ($ui | del(.synthetic))
 }
