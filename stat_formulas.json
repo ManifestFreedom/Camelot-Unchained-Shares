@@ -21,8 +21,8 @@
   "baseValue": 5,
   "formulas": {
     "EffectiveHP": {
-      "name": "Effective HP (Guts-adjusted)",
-      "expr": "stats.MaxHP * (1 + stats.GutsThreshold * stats.GutsValue / (1 - stats.GutsValue))",
+      "name": "eHP added by Guts",
+      "expr": "stats.MaxHP * (1 + stats.GutsThreshold * stats.GutsValue / (1 - stats.GutsValue)) - stats.MaxHP",
       "deps": [
         "GutsThreshold",
         "GutsValue",
@@ -757,7 +757,7 @@
         "driver": "Vitality"
       },
       "EffectiveHP": {
-        "label": "Effective HP",
+        "label": "eHP added by Guts",
         "format": "integer",
         "driver": "Endurance"
       },

@@ -32,7 +32,7 @@
   ],
   "display": {
     "MaxHP":                     { "label": "Max HP",           "format": "integer", "driver": "Vitality"   },
-    "EffectiveHP":               { "label": "Effective HP",     "format": "integer", "driver": "Endurance"   },
+    "EffectiveHP":               { "label": "eHP added by Guts","format": "integer", "driver": "Endurance"  },
     "MaxShield":                 { "label": "Max Shield",       "format": "integer", "driver": "Vitality"   },
     "MaxCombinedHealth":         { "label": "Max HP+Shield",    "format": "integer", "driver": "Vitality"   },
     "HealthRegeneration":        { "label": "HP Regen/s",       "format": "float2",  "driver": "Vitality"   },
@@ -62,8 +62,8 @@
   },
   "synthetic": {
     "EffectiveHP": {
-      "name": "Effective HP (Guts-adjusted)",
-      "expr": "stats.MaxHP * (1 + stats.GutsThreshold * stats.GutsValue / (1 - stats.GutsValue))"
+      "name": "eHP added by Guts",
+      "expr": "stats.MaxHP * (1 + stats.GutsThreshold * stats.GutsValue / (1 - stats.GutsValue)) - stats.MaxHP"
     }
   }
 }
