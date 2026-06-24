@@ -1,3 +1,7 @@
 *secret*
 *env*
 *auth*
+.idea/
+.vscode/
+.pi/
+pipeline/stats.json
